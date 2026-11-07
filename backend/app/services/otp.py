@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.security import hash_password, verify_password
 from app.db.models import OtpChallenge, OtpPurpose, OtpStatus
+from app.services.otp_delivery import deliver_otp
 
 
 def mask_destination(value: str) -> str:
@@ -33,7 +34,7 @@ def create_otp(db: Session, purpose: OtpPurpose, destination: str, *, user_id=No
     )
     db.add(challenge)
     db.flush()
-    # Delivery is deliberately an adapter boundary. Do not log OTP values in production.
+    deliver_otp(destination, code)
     return challenge
 
 

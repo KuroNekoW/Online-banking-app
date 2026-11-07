@@ -88,11 +88,14 @@ def authenticate_transfer(transfer_id: uuid.UUID, payload: OtpCode, current_user
     transfer.authenticated_at = datetime.now(timezone.utc)
     transfer.status = TransferStatus.processing
     if transfer.type == TransferType.internal:
-        ledger = Transaction(idempotency_key=uuid.uuid4(), reference=f"LED-{transfer.reference}", transfer_id=transfer.id, status=TransactionStatus.posted,
-                             description=transfer.description, posted_at=datetime.now(timezone.utc))
+        # Entries must be created while pending. The database makes posted entries immutable.
+        ledger = Transaction(idempotency_key=uuid.uuid4(), reference=f"LED-{transfer.reference}", transfer_id=transfer.id, status=TransactionStatus.pending,
+                             description=transfer.description)
         db.add(ledger); db.flush()
         db.add_all([TransactionEntry(transaction_id=ledger.id, account_id=transfer.source_account_id, amount=-transfer.amount),
                     TransactionEntry(transaction_id=ledger.id, account_id=transfer.destination_account_id, amount=transfer.amount)])
+        db.flush()
+        ledger.status, ledger.posted_at = TransactionStatus.posted, datetime.now(timezone.utc)
         transfer.status, transfer.completed_at = TransferStatus.completed, datetime.now(timezone.utc)
         receiver = db.get(Account, transfer.destination_account_id)
         db.add(Notification(user_id=current_user.id, transfer_id=transfer.id, type=NotificationType.transfer, title="Transfer completed", body=f"Transfer {transfer.reference} completed"))

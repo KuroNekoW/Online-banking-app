@@ -1,38 +1,116 @@
-# Online banking app
+# Mobile Online Banking System
 
-## Start the database and API
+Mobile banking MVP for SE113. It consists of a Flutter client in `app/`, a FastAPI backend in `backend/`, and PostgreSQL. The functional specification is in [`docs/docs.docx`](docs/docs.docx); the database diagram source is [`docs/database-erd.puml`](docs/database-erd.puml).
 
-1. Copy `.env.example` to `.env` and replace the sample password.
-2. Run `docker compose up --build`.
-3. Open `http://localhost:8000/docs` or check `http://localhost:8000/health`.
+## Project handoff
 
-The API container runs `alembic upgrade head` before it starts. For local backend development, copy `backend/.env.example` to `backend/.env`, install `backend/requirements.txt`, then run `alembic upgrade head` from `backend`.
+This README is the technical starting point for anyone continuing the project. The database schema, primary API groups, and the first backend test suite are implemented and verified.
 
-## Data model
+Current implementation status:
 
-`banking.transaction_entries` is the source ledger. Every posted transaction must sum to zero; an outgoing account entry is negative and an incoming entry is positive. The database rejects an unbalanced posted transaction at commit time. Keep posted ledger entries immutable; correct an error by recording a reversing transaction.
+- PostgreSQL schema and Alembic migrations are complete for the MVP entities.
+- Baseline `CUSTOMER`/`ADMIN` roles, permissions, and an idempotently seeded Admin are present.
+- API supports authentication, registration OTP, profile/accounts, beneficiaries, transfers, transaction history, notifications, and Admin-lite operations.
+- Backend tests run against an isolated PostgreSQL instance and cover the critical auth, authorization, ownership, idempotency, and internal-ledger path.
 
-## MVP database coverage
+## Architecture and important paths
 
-The schema implements the MVP use cases in `docs.docx`: registration and OTP verification (`registration_requests`, `otp_challenges`), login and revocable sessions (`auth_sessions`), customer/admin roles (`roles`, `permissions`, `user_roles`), beneficiary management, internal/interbank-simulation transfer workflow (`transfers`), immutable ledger entries, notifications, and administrator audit logs. OTPs and refresh tokens are stored only as hashes.
+| Path | Responsibility |
+| --- | --- |
+| `app/` | Flutter mobile client (currently starter project). |
+| `backend/main.py` | FastAPI application and router registration. |
+| `backend/app/api/` | HTTP routers: `auth.py`, `customer.py`, `transfers.py`, `admin.py`. |
+| `backend/app/db/models.py` | SQLAlchemy mapping for all current banking tables and enums. |
+| `backend/alembic/versions/` | Schema migrations; never edit an applied migration in a shared environment. |
+| `backend/app/services/otp.py` | OTP creation/verification policy. |
+| `backend/app/services/otp_delivery.py` | OTP delivery boundary; currently a safe no-op provider. |
+| `backend/tests/` | Integration-style backend tests and shared fixtures. |
+| `docker-compose.yml` | Development API/PostgreSQL and the isolated `postgres-test` profile. |
 
-The ERD source is available in [`docs/database-erd.puml`](docs/database-erd.puml).
+## Run the development stack
 
-## Seed and authentication
+1. Copy `.env.example` to `.env` and replace the sample credentials and JWT secret.
+2. Start the stack:
 
-On API startup, the seed command creates `CUSTOMER` and `ADMIN` roles, their baseline permissions, and one active Admin account. It is idempotent, so restarting the API does not create duplicate records.
+   ```powershell
+   docker compose up --build
+   ```
 
-Configure `JWT_SECRET_KEY`, `SEED_ADMIN_EMAIL`, and `SEED_ADMIN_PASSWORD` in `.env` before sharing or deploying the project. The authentication endpoints are available at `/docs`:
+3. Browse the OpenAPI contract at `http://localhost:8000/docs` or call `http://localhost:8000/health`.
 
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
-- `GET /auth/me`
+The API container automatically runs `alembic upgrade head` and then the idempotent seed command. For direct local backend development, copy `backend/.env.example` to `backend/.env`, install `backend/requirements.txt`, and run Alembic from `backend/`.
 
-## API coverage
+The default development Admin is configured by `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`. Never deploy with the sample `.env` values.
 
-The FastAPI contract at `/docs` includes registration and OTP verification, customer profile
-and accounts, beneficiaries, OTP-protected internal transfers, simulated interbank transfers,
-transaction history, notifications, and Admin-lite customer, role, and audit-log endpoints.
-OTP generation is behind a delivery adapter boundary; connect an email/SMS provider before
-using registration, password reset, or transfer authentication outside local development.
+## API implementation map
+
+OpenAPI (`/docs`) is the canonical request/response contract. The main paths are:
+
+| Area | Endpoints |
+| --- | --- |
+| System | `GET /health` |
+| Authentication | `POST /auth/register`, `/auth/register/verify`, `/auth/otp/{challenge_id}/resend`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/password-reset`, `/auth/password-reset/confirm`, `/auth/change-password`; `GET /auth/me` |
+| Customer | `GET/PATCH /profile`; `GET /accounts`, `/accounts/{id}`, `/accounts/{id}/balance`; beneficiary CRUD; `GET /transactions`, `/transactions/{id}`; notifications list/read |
+| Transfers | `POST /transfers`, `POST /transfers/{id}/confirm`, `POST /transfers/{id}/authenticate`, `GET /transfers/{id}`, `GET /transfers/by-reference/{reference}` |
+| Admin | Customer list/detail/lock/unlock, roles, role assignment, and audit-log listing under `/admin` |
+
+All protected endpoints require `Authorization: Bearer <access_token>`. A refresh token is hashed at rest and rotated at `POST /auth/refresh`.
+
+## Business invariants
+
+These rules are essential when modifying the transfer or ledger code:
+
+- `banking.transaction_entries` is the balance source of truth. Do **not** store a mutable balance column or update balance directly.
+- A posted transaction must sum to zero. A debit entry is negative; a credit entry is positive.
+- Create a ledger transaction as `pending`, insert both entries, then set it to `posted`. The database rejects entries added to a posted transaction and also rejects an unbalanced posting at commit time.
+- Posted ledger entries are immutable. Correct a mistake with a reversing transaction.
+- Transfer creation is idempotent per customer and `idempotency_key`.
+- Accounts, beneficiaries, transactions, and transfers must always be constrained to the current authenticated owner; never trust a client-supplied user ID.
+- Admin lock revokes active sessions. Admin endpoints must use `get_current_admin` rather than only checking that a token exists.
+- OTP and refresh-token secrets are stored as hashes. Never return or log an OTP in a production HTTP response.
+
+## OTP delivery
+
+`backend/app/services/otp_delivery.py` is intentionally a no-op adapter. It prevents secrets from being printed while providing one replacement point for a real email/SMS provider. Tests monkeypatch this adapter with an in-memory fake to obtain the OTP necessary for a verification flow.
+
+Before real deployment, replace the adapter with a provider implementation, manage provider credentials through environment variables/secrets, and add delivery-failure handling.
+
+## Backend tests
+
+Tests use `postgres-test`, a disposable database on port `5433`; they never connect to the development database on port `5432`. The suite runs the real Alembic migration chain, truncates and reseeds its own data before every test, and uses a fake OTP delivery provider.
+
+Run from the repository root:
+
+```powershell
+docker compose --profile test up -d postgres-test
+docker compose run --rm -e PYTHONPATH=/code -e TEST_DATABASE_URL=postgresql+psycopg://banking_test:banking_test_password@postgres-test:5432/banking_test api pytest -q
+docker compose --profile test rm -s -f postgres-test
+```
+
+Use `-vv -s` instead of `-q` to see each named test, or run one module:
+
+```powershell
+docker compose run --rm -e PYTHONPATH=/code -e TEST_DATABASE_URL=postgresql+psycopg://banking_test:banking_test_password@postgres-test:5432/banking_test api pytest -vv -s tests/test_transfers.py
+```
+
+Current test coverage:
+
+- Registration + OTP verification creates a Customer with an account.
+- Customer cannot use Admin endpoints or access another customer's account/beneficiary.
+- Admin lock revokes an active Customer session.
+- Internal transfer rejects insufficient funds, is idempotent, requires OTP, changes both balances, and produces a balanced ledger transaction.
+
+Test setup and concrete request data are in `backend/tests/conftest.py`; individual scenarios are in `test_auth.py`, `test_customer.py`, and `test_transfers.py`.
+
+## Remaining work
+
+Prioritize these items before considering the backend production-ready:
+
+1. Add test coverage for refresh/logout, password reset, OTP resend/expiry/attempt limits, notifications, pagination, role assignment, audit logs, and interbank state transitions.
+2. Enforce the documented failed-login threshold using `failed_login_count` and lock the user when the configured limit is exceeded.
+3. Implement a genuine OTP email/SMS provider and delivery observability.
+4. Add interbank simulation reconciliation so `pending_external` can become `completed` or `failed`.
+5. Add stable Pydantic response schemas to every endpoint instead of returning ORM objects in a few list/detail routes.
+6. Add CI to run the PostgreSQL test suite on every pull request, then integrate the Flutter client.
+
+When changing schema, create a new Alembic revision and add/adjust tests in the same change. Re-run the test command above before handing off work.
