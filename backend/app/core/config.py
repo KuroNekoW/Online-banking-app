@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 15
     refresh_token_days: int = 7
+    otp_expiry_minutes: int = 5
+    otp_max_attempts: int = 5
+    otp_resend_cooldown_seconds: int = 30
     seed_admin_email: str = "admin@banking.local"
     seed_admin_password: str = "ChangeThisAdminPassword123!"
 

@@ -28,3 +28,11 @@ Configure `JWT_SECRET_KEY`, `SEED_ADMIN_EMAIL`, and `SEED_ADMIN_PASSWORD` in `.e
 - `POST /auth/refresh`
 - `POST /auth/logout`
 - `GET /auth/me`
+
+## API coverage
+
+The FastAPI contract at `/docs` includes registration and OTP verification, customer profile
+and accounts, beneficiaries, OTP-protected internal transfers, simulated interbank transfers,
+transaction history, notifications, and Admin-lite customer, role, and audit-log endpoints.
+OTP generation is behind a delivery adapter boundary; connect an email/SMS provider before
+using registration, password reset, or transfer authentication outside local development.

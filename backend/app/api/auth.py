@@ -1,3 +1,5 @@
+import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -7,12 +9,70 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import bearer_scheme, get_current_user
 from app.core.config import get_settings
-from app.core.security import create_access_token, decode_access_token, hash_token, new_refresh_secret, verify_password
-from app.db.models import AuthSession, User, UserStatus
+from app.core.security import create_access_token, decode_access_token, hash_password, hash_token, new_refresh_secret, verify_password
+from app.db.models import Account, AccountStatus, AuthSession, OtpChallenge, OtpPurpose, OtpStatus, RegistrationRequest, Role, User, UserStatus
 from app.db.session import get_db
-from app.schemas.auth import CurrentUserResponse, LoginRequest, RefreshRequest, TokenResponse
+from app.schemas.auth import ChallengeResponse, ChangePasswordRequest, CurrentUserResponse, LoginRequest, OtpVerifyRequest, PasswordResetConfirmRequest, RefreshRequest, RegisterRequest, TokenResponse
+from app.services.otp import create_otp, verify_otp
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def challenge_response(challenge, message: str) -> ChallengeResponse:
+    return ChallengeResponse(challenge_id=challenge.id, expires_at=challenge.expires_at, message=message)
+
+
+@router.post("/register", response_model=ChallengeResponse, status_code=status.HTTP_201_CREATED)
+def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> ChallengeResponse:
+    if db.query(User).filter(or_(User.email == payload.email, User.phone == payload.phone)).first():
+        raise HTTPException(status_code=409, detail="Email or phone is already registered")
+    request = RegistrationRequest(
+        email=str(payload.email), phone=payload.phone, full_name=payload.full_name,
+        password_hash=hash_password(payload.password),
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+    )
+    db.add(request)
+    db.flush()
+    challenge = create_otp(db, OtpPurpose.registration, str(payload.email), registration_request_id=request.id)
+    db.commit()
+    return challenge_response(challenge, "Verification code sent")
+
+
+@router.post("/register/verify", status_code=status.HTTP_201_CREATED)
+def verify_registration(payload: OtpVerifyRequest, db: Session = Depends(get_db)) -> dict:
+    challenge = verify_otp(db, payload.challenge_id, payload.code, OtpPurpose.registration)
+    request = db.get(RegistrationRequest, challenge.registration_request_id)
+    if request is None or request.verified_at is not None or request.expires_at <= datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Registration request is invalid or expired")
+    if db.query(User).filter(or_(User.email == request.email, User.phone == request.phone)).first():
+        raise HTTPException(status_code=409, detail="Email or phone is already registered")
+    user = User(email=request.email, phone=request.phone, full_name=request.full_name, password_hash=request.password_hash, status=UserStatus.active)
+    customer_role = db.query(Role).filter(Role.code == "CUSTOMER").first()
+    if customer_role is None:
+        raise HTTPException(status_code=500, detail="Customer role is not configured")
+    user.roles.append(customer_role)
+    db.add(user)
+    db.flush()
+    account = Account(owner_id=user.id, account_number=f"100{secrets.randbelow(10**12):012d}", currency="VND", status=AccountStatus.active)
+    db.add(account)
+    request.verified_at = datetime.now(timezone.utc)
+    challenge.status, challenge.consumed_at = OtpStatus.consumed, datetime.now(timezone.utc)
+    db.commit()
+    return {"user_id": str(user.id), "account_id": str(account.id), "message": "Account activated"}
+
+
+@router.post("/otp/{challenge_id}/resend", response_model=ChallengeResponse)
+def resend_otp(challenge_id: uuid.UUID, db: Session = Depends(get_db)) -> ChallengeResponse:
+    challenge = db.get(OtpChallenge, challenge_id)
+    if challenge is None or challenge.status != OtpStatus.sent or challenge.expires_at <= datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="OTP challenge cannot be resent")
+    if challenge.next_resend_at and challenge.next_resend_at > datetime.now(timezone.utc):
+        raise HTTPException(status_code=429, detail="Please wait before requesting another code")
+    challenge.status = OtpStatus.rejected
+    replacement = create_otp(db, challenge.purpose, challenge.destination_masked, user_id=challenge.user_id,
+                             registration_request_id=challenge.registration_request_id, transfer_id=challenge.transfer_id)
+    db.commit()
+    return challenge_response(replacement, "Verification code resent")
 
 
 def issue_tokens(db: Session, user: User, request: Request) -> TokenResponse:
@@ -101,3 +161,34 @@ def me(current_user: User = Depends(get_current_user)) -> CurrentUserResponse:
         roles=[role.code for role in current_user.roles],
         last_login_at=current_user.last_login_at,
     )
+
+
+@router.post("/password-reset", response_model=ChallengeResponse)
+def request_password_reset(identifier: str, db: Session = Depends(get_db)) -> ChallengeResponse:
+    user = db.query(User).filter(or_(User.email == identifier, User.phone == identifier, User.username == identifier)).first()
+    if user is None or user.status != UserStatus.active:
+        raise HTTPException(status_code=404, detail="Active account not found")
+    challenge = create_otp(db, OtpPurpose.password_reset, user.email, user_id=user.id)
+    db.commit()
+    return challenge_response(challenge, "Verification code sent")
+
+
+@router.post("/password-reset/confirm", status_code=status.HTTP_204_NO_CONTENT)
+def confirm_password_reset(payload: PasswordResetConfirmRequest, db: Session = Depends(get_db)) -> None:
+    challenge = verify_otp(db, payload.challenge_id, payload.code, OtpPurpose.password_reset)
+    user = db.get(User, challenge.user_id)
+    if user is None:
+        raise HTTPException(status_code=400, detail="Invalid password reset request")
+    user.password_hash = hash_password(payload.new_password)
+    challenge.status, challenge.consumed_at = OtpStatus.consumed, datetime.now(timezone.utc)
+    db.query(AuthSession).filter(AuthSession.user_id == user.id, AuthSession.revoked_at.is_(None)).update({AuthSession.revoked_at: datetime.now(timezone.utc), AuthSession.revoke_reason: "password_reset"})
+    db.commit()
+
+
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(payload: ChangePasswordRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> None:
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    current_user.password_hash = hash_password(payload.new_password)
+    db.query(AuthSession).filter(AuthSession.user_id == current_user.id, AuthSession.id != None, AuthSession.revoked_at.is_(None)).update({AuthSession.revoked_at: datetime.now(timezone.utc), AuthSession.revoke_reason: "password_changed"})
+    db.commit()

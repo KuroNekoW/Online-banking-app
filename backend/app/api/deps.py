@@ -32,3 +32,9 @@ def get_current_user(
     if session is None or session.user_id != user_id or session.revoked_at is not None or user is None or user.status != UserStatus.active:
         raise unauthorized
     return user
+
+
+def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    if "ADMIN" not in {role.code for role in current_user.roles}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Administrator permission required")
+    return current_user
