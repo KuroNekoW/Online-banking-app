@@ -17,3 +17,14 @@ The API container runs `alembic upgrade head` before it starts. For local backen
 The schema implements the MVP use cases in `docs.docx`: registration and OTP verification (`registration_requests`, `otp_challenges`), login and revocable sessions (`auth_sessions`), customer/admin roles (`roles`, `permissions`, `user_roles`), beneficiary management, internal/interbank-simulation transfer workflow (`transfers`), immutable ledger entries, notifications, and administrator audit logs. OTPs and refresh tokens are stored only as hashes.
 
 The ERD source is available in [`docs/database-erd.puml`](docs/database-erd.puml).
+
+## Seed and authentication
+
+On API startup, the seed command creates `CUSTOMER` and `ADMIN` roles, their baseline permissions, and one active Admin account. It is idempotent, so restarting the API does not create duplicate records.
+
+Configure `JWT_SECRET_KEY`, `SEED_ADMIN_EMAIL`, and `SEED_ADMIN_PASSWORD` in `.env` before sharing or deploying the project. The authentication endpoints are available at `/docs`:
+
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+- `GET /auth/me`

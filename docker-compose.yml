@@ -21,6 +21,9 @@ services:
       context: ./backend
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-banking_app}:${POSTGRES_PASSWORD:-change-me-in-local-env}@postgres:5432/${POSTGRES_DB:-banking}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-development-only-change-this-secret-before-deployment}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@banking.local}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeThisAdminPassword123!}
     ports:
       - "8000:8000"
     depends_on:
