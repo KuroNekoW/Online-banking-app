@@ -1,0 +1,243 @@
+@startuml
+title Mobile Online Banking - Database ERD
+
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam entity {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+}
+
+left to right direction
+
+' ==================== CORE ====================
+entity "banking.users" as users {
+  * id : uuid <<PK>>
+  --
+  email : varchar(320) <<UQ>>
+  phone : varchar(32) <<UQ>>
+  username : varchar(64) <<UQ>>
+  password_hash : varchar(255)
+  full_name : varchar(150)
+  status : user_status
+  failed_login_count : smallint
+  last_login_at : timestamptz
+  created_at : timestamptz
+  updated_at : timestamptz
+}
+
+entity "banking.accounts" as accounts {
+  * id : uuid <<PK>>
+  --
+  owner_id : uuid <<FK>>
+  account_number : varchar(20) <<UQ>>
+  currency : char(3)
+  status : account_status
+  created_at : timestamptz
+}
+
+entity "banking.auth_sessions" as sessions {
+  * id : uuid <<PK>>
+  --
+  user_id : uuid <<FK>>
+  refresh_token_hash : varchar(255) <<UQ>>
+  device_id : varchar(255)
+  expires_at : timestamptz
+  revoked_at : timestamptz
+  revoke_reason : varchar(255)
+}
+
+entity "banking.registration_requests" as registrations {
+  * id : uuid <<PK>>
+  --
+  email : varchar(320)
+  phone : varchar(32)
+  password_hash : varchar(255)
+  full_name : varchar(150)
+  expires_at : timestamptz
+  verified_at : timestamptz
+}
+
+' ==================== RBAC ====================
+entity "banking.roles" as roles {
+  * id : uuid <<PK>>
+  --
+  code : varchar(50) <<UQ>>
+  name : varchar(100)
+  is_system : boolean
+}
+
+entity "banking.permissions" as permissions {
+  * id : uuid <<PK>>
+  --
+  code : varchar(100) <<UQ>>
+  description : varchar(255)
+}
+
+entity "banking.user_roles" as user_roles {
+  * user_id : uuid <<PK,FK>>
+  * role_id : uuid <<PK,FK>>
+  --
+  assigned_by : uuid <<FK>>
+  assigned_at : timestamptz
+}
+
+entity "banking.role_permissions" as role_permissions {
+  * role_id : uuid <<PK,FK>>
+  * permission_id : uuid <<PK,FK>>
+}
+
+' ==================== TRANSFER & LEDGER ====================
+entity "banking.beneficiaries" as beneficiaries {
+  * id : uuid <<PK>>
+  --
+  owner_id : uuid <<FK>>
+  nickname : varchar(100)
+  account_number : varchar(34)
+  account_name : varchar(150)
+  bank_code : varchar(32)
+  is_internal : boolean
+}
+
+entity "banking.transfers" as transfers {
+  * id : uuid <<PK>>
+  --
+  customer_id : uuid <<FK>>
+  source_account_id : uuid <<FK>>
+  destination_account_id : uuid <<FK, nullable>>
+  beneficiary_id : uuid <<FK, nullable>>
+  type : transfer_type
+  status : transfer_status
+  reference : varchar(64) <<UQ>>
+  idempotency_key : uuid
+  amount : numeric(19,4)
+  fee : numeric(19,4)
+  external_reference : varchar(100)
+  authenticated_at : timestamptz
+  completed_at : timestamptz
+}
+
+entity "banking.transactions" as ledger_transactions {
+  * id : uuid <<PK>>
+  --
+  transfer_id : uuid <<FK,UQ, nullable>>
+  idempotency_key : uuid <<UQ>>
+  reference : varchar(64) <<UQ>>
+  status : transaction_status
+  posted_at : timestamptz
+}
+
+entity "banking.transaction_entries" as ledger_entries {
+  * id : uuid <<PK>>
+  --
+  transaction_id : uuid <<FK>>
+  account_id : uuid <<FK>>
+  amount : numeric(19,4)
+  created_at : timestamptz
+}
+
+' ==================== SECURITY & NOTIFICATION ====================
+entity "banking.otp_challenges" as otp {
+  * id : uuid <<PK>>
+  --
+  user_id : uuid <<FK, nullable>>
+  registration_request_id : uuid <<FK, nullable>>
+  transfer_id : uuid <<FK, nullable>>
+  purpose : otp_purpose
+  status : otp_status
+  delivery_channel : varchar(16)
+  destination_masked : varchar(320)
+  code_hash : varchar(255)
+  attempt_count : smallint
+  max_attempts : smallint
+  expires_at : timestamptz
+  verified_at : timestamptz
+  consumed_at : timestamptz
+}
+
+entity "banking.notifications" as notifications {
+  * id : uuid <<PK>>
+  --
+  user_id : uuid <<FK>>
+  transfer_id : uuid <<FK, nullable>>
+  type : notification_type
+  title : varchar(150)
+  body : varchar(500)
+  read_at : timestamptz
+}
+
+entity "banking.audit_logs" as audit_logs {
+  * id : uuid <<PK>>
+  --
+  actor_user_id : uuid <<FK, nullable>>
+  action : varchar(100)
+  target_type : varchar(50)
+  target_id : uuid
+  metadata : jsonb
+  created_at : timestamptz
+}
+
+' ==================== RELATIONSHIPS ====================
+
+' User core
+users         ||--o{ accounts          : owns
+users         ||--o{ sessions          : opens
+users         ||--o{ beneficiaries     : saves
+users         ||--o{ transfers         : creates
+users         ||--o{ notifications     : receives
+users         |o--o{ audit_logs        : acts
+
+' RBAC
+users         ||--o{ user_roles        : has
+roles         ||--o{ user_roles        : assigned_to
+roles         ||--o{ role_permissions  : grants
+permissions   ||--o{ role_permissions  : contained_in
+
+' Note: assigned_by is self-reference to users (who assigned the role)
+users         |o--o{ user_roles        : assigned_by
+
+' Transfer
+accounts      ||--o{ transfers         : source
+accounts      |o--o{ transfers         : destination
+beneficiaries |o--o{ transfers         : selected_for
+
+' Ledger (double-entry)
+transfers     ||--o| ledger_transactions : posts
+ledger_transactions ||--|{ ledger_entries : contains
+accounts      ||--o{ ledger_entries     : records
+
+' OTP (polymorphic-like)
+users         |o--o{ otp               : user_otp
+registrations |o--o{ otp               : registration_otp
+transfers     |o--o{ otp               : transfer_otp
+
+' Notifications
+transfers     |o--o{ notifications     : causes
+
+' ==================== NOTES ====================
+note bottom of ledger_entries
+  **Double-entry rule**
+  Posted ledger transactions must balance:
+  SUM(transaction_entries.amount) = 0
+  Posted entries are **immutable**.
+end note
+
+note bottom of otp
+  **OTP rules**
+  - code & refresh tokens are stored as **hashes**
+  - Exactly **one** of:
+    • user_id
+    • registration_request_id
+    • transfer_id
+    must be present (depending on purpose)
+end note
+
+note right of transfers
+  destination_account_id  → internal transfer
+  beneficiary_id         → external transfer
+  (mutually exclusive in application logic)
+end note
+
+@enduml

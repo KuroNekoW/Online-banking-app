@@ -59,6 +59,7 @@ ENV/
 
 # .env / instance / local database files
 backend/.env
+.env
 backend/instance/
 *.sqlite3
 *.db
