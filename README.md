@@ -23,20 +23,20 @@ Current implementation status:
 | `backend/app/db/models.py` | SQLAlchemy mapping for all current banking tables and enums. |
 | `backend/alembic/versions/` | Schema migrations; never edit an applied migration in a shared environment. |
 | `backend/app/services/otp.py` | OTP creation/verification policy. |
-| `backend/app/services/otp_delivery.py` | OTP delivery boundary; currently a safe no-op provider. |
+| `backend/app/services/otp_delivery.py` | SMTP OTP delivery to local Mailpit. |
 | `backend/tests/` | Integration-style backend tests and shared fixtures. |
 | `docker-compose.yml` | Development API/PostgreSQL and the isolated `postgres-test` profile. |
 
 ## Run the development stack
 
 1. Copy `.env.example` to `.env` and replace the sample credentials and JWT secret.
-2. Start the stack:
+2. Start the stack (API, PostgreSQL, and local email inbox):
 
    ```powershell
    docker compose up --build
    ```
 
-3. Browse the OpenAPI contract at `http://localhost:8000/docs` or call `http://localhost:8000/health`.
+3. Browse the OpenAPI contract at `http://localhost:8000/docs`, call `http://localhost:8000/health`, and view OTP emails at `http://localhost:8025`.
 
 The API container automatically runs `alembic upgrade head` and then the idempotent seed command. For direct local backend development, copy `backend/.env.example` to `backend/.env`, install `backend/requirements.txt`, and run Alembic from `backend/`.
 
@@ -71,9 +71,34 @@ These rules are essential when modifying the transfer or ledger code:
 
 ## OTP delivery
 
-`backend/app/services/otp_delivery.py` is intentionally a no-op adapter. It prevents secrets from being printed while providing one replacement point for a real email/SMS provider. Tests monkeypatch this adapter with an in-memory fake to obtain the OTP necessary for a verification flow.
+Local development sends OTP emails through Mailpit. `docker compose up --build` starts Mailpit with:
 
-Before real deployment, replace the adapter with a provider implementation, manage provider credentials through environment variables/secrets, and add delivery-failure handling.
+- Web inbox: `http://localhost:8025`
+- SMTP relay for the API: `mailpit:1025` inside Docker; port `1025` is also exposed on the host.
+
+Messages are captured locally and are not sent to real mailboxes. The OTP is not included in API
+responses or application logs. Open the inbox, select the latest message for the recipient email,
+and enter its six-digit code in the app.
+
+### Registration OTP flow
+
+1. The frontend calls `POST /auth/register` with `email`, `phone`, `full_name`, and `password`.
+2. The API returns `challenge_id` and `expires_at`, then sends the code to Mailpit.
+3. The user reads the code at `http://localhost:8025` and enters it in the frontend.
+4. The frontend calls `POST /auth/register/verify` with `{ "challenge_id": "...", "code": "123456" }`.
+5. To request another code, call `POST /auth/otp/{challenge_id}/resend`. The existing challenge
+   is rotated; its resend cooldown and send limit apply.
+
+Transfer authentication follows the same pattern: call `POST /transfers/{id}/confirm`, read the
+email in Mailpit, then submit `{ "code": "123456" }` to
+`POST /transfers/{id}/authenticate`.
+
+OTP expiry, attempt count, resend cooldown, and resend count are controlled by `OTP_EXPIRY_MINUTES`,
+`OTP_MAX_ATTEMPTS`, and `OTP_RESEND_COOLDOWN_SECONDS` settings. Mailpit needs no account or external
+credentials. Tests replace the SMTP delivery adapter with an in-memory fake.
+
+For deployment beyond local demo, replace Mailpit with an authenticated email/SMS provider, manage
+provider credentials through secrets, and add delivery-failure handling and monitoring.
 
 ## Backend tests
 
@@ -108,7 +133,7 @@ Prioritize these items before considering the backend production-ready:
 
 1. Add test coverage for refresh/logout, password reset, OTP resend/expiry/attempt limits, notifications, pagination, role assignment, audit logs, and interbank state transitions.
 2. Enforce the documented failed-login threshold using `failed_login_count` and lock the user when the configured limit is exceeded.
-3. Implement a genuine OTP email/SMS provider and delivery observability.
+3. Replace Mailpit with a genuine OTP email/SMS provider and add delivery observability before deployment.
 4. Add interbank simulation reconciliation so `pending_external` can become `completed` or `failed`.
 5. Add stable Pydantic response schemas to every endpoint instead of returning ORM objects in a few list/detail routes.
 6. Add CI to run the PostgreSQL test suite on every pull request, then integrate the Flutter client.

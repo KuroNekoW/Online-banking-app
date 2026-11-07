@@ -13,7 +13,7 @@ from app.core.security import create_access_token, decode_access_token, hash_pas
 from app.db.models import Account, AccountStatus, AuthSession, OtpChallenge, OtpPurpose, OtpStatus, RegistrationRequest, Role, User, UserStatus
 from app.db.session import get_db
 from app.schemas.auth import ChallengeResponse, ChangePasswordRequest, CurrentUserResponse, LoginRequest, OtpVerifyRequest, PasswordResetConfirmRequest, RefreshRequest, RegisterRequest, TokenResponse
-from app.services.otp import create_otp, verify_otp
+from app.services.otp import create_otp, resend_otp as resend_otp_challenge, verify_otp
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -64,13 +64,9 @@ def verify_registration(payload: OtpVerifyRequest, db: Session = Depends(get_db)
 @router.post("/otp/{challenge_id}/resend", response_model=ChallengeResponse)
 def resend_otp(challenge_id: uuid.UUID, db: Session = Depends(get_db)) -> ChallengeResponse:
     challenge = db.get(OtpChallenge, challenge_id)
-    if challenge is None or challenge.status != OtpStatus.sent or challenge.expires_at <= datetime.now(timezone.utc):
+    if challenge is None:
         raise HTTPException(status_code=400, detail="OTP challenge cannot be resent")
-    if challenge.next_resend_at and challenge.next_resend_at > datetime.now(timezone.utc):
-        raise HTTPException(status_code=429, detail="Please wait before requesting another code")
-    challenge.status = OtpStatus.rejected
-    replacement = create_otp(db, challenge.purpose, challenge.destination_masked, user_id=challenge.user_id,
-                             registration_request_id=challenge.registration_request_id, transfer_id=challenge.transfer_id)
+    replacement = resend_otp_challenge(db, challenge)
     db.commit()
     return challenge_response(replacement, "Verification code resent")
 

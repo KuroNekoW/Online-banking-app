@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.security import hash_password, verify_password
-from app.db.models import OtpChallenge, OtpPurpose, OtpStatus
+from app.db.models import OtpChallenge, OtpPurpose, OtpStatus, RegistrationRequest, Transfer, User
 from app.services.otp_delivery import deliver_otp
 
 
@@ -58,5 +58,42 @@ def verify_otp(db: Session, challenge_id, code: str, purpose: OtpPurpose) -> Otp
         raise invalid
     challenge.status = OtpStatus.verified
     challenge.verified_at = now
+    db.flush()
+    return challenge
+
+
+def resend_otp(db: Session, challenge: OtpChallenge) -> OtpChallenge:
+    """Rotate an existing challenge, preserving its subject and resend limits."""
+    now = datetime.now(timezone.utc)
+    if challenge.status != OtpStatus.sent or challenge.expires_at <= now:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="OTP challenge cannot be resent")
+    if challenge.send_count >= challenge.max_sends:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="OTP resend limit reached")
+    if challenge.next_resend_at and challenge.next_resend_at > now:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Please wait before requesting another code")
+
+    if challenge.registration_request_id:
+        subject = db.get(RegistrationRequest, challenge.registration_request_id)
+        destination = subject.email if subject else None
+    elif challenge.user_id:
+        subject = db.get(User, challenge.user_id)
+        destination = subject.email if subject else None
+    elif challenge.transfer_id:
+        transfer = db.get(Transfer, challenge.transfer_id)
+        subject = db.get(User, transfer.customer_id) if transfer else None
+        destination = subject.email if subject else None
+    else:
+        destination = None
+    if not destination:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="OTP destination is unavailable")
+
+    settings = get_settings()
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    challenge.code_hash = hash_password(code)
+    challenge.attempt_count = 0
+    challenge.send_count += 1
+    challenge.expires_at = now + timedelta(minutes=settings.otp_expiry_minutes)
+    challenge.next_resend_at = now + timedelta(seconds=settings.otp_resend_cooldown_seconds)
+    deliver_otp(destination, code)
     db.flush()
     return challenge

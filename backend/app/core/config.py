@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     otp_expiry_minutes: int = 5
     otp_max_attempts: int = 5
     otp_resend_cooldown_seconds: int = 30
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    email_from: str = "no-reply@banking.local"
+    app_env: str = "development"
     seed_admin_email: str = "admin@banking.local"
     seed_admin_password: str = "ChangeThisAdminPassword123!"
 
