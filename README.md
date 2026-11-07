@@ -17,7 +17,7 @@ Current implementation status:
 
 | Path | Responsibility |
 | --- | --- |
-| `app/` | Flutter mobile client (currently starter project). |
+| `app/` | Flutter client for authentication, accounts, transfers, transaction history, beneficiaries, notifications, and profile management. See [`app/README.md`](app/README.md) for frontend setup and API connection details. |
 | `backend/main.py` | FastAPI application and router registration. |
 | `backend/app/api/` | HTTP routers: `auth.py`, `customer.py`, `transfers.py`, `admin.py`. |
 | `backend/app/db/models.py` | SQLAlchemy mapping for all current banking tables and enums. |
@@ -41,6 +41,18 @@ Current implementation status:
 The API container automatically runs `alembic upgrade head` and then the idempotent seed command. For direct local backend development, copy `backend/.env.example` to `backend/.env`, install `backend/requirements.txt`, and run Alembic from `backend/`.
 
 The default development Admin is configured by `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`. Never deploy with the sample `.env` values.
+
+## Run the Flutter frontend
+
+Start the backend stack first with `docker compose up --build -d`, then verify that `http://127.0.0.1:8000/health` returns `{"status":"ok"}`. In PowerShell, move into `app/`, install dependencies, and run the client on Chrome:
+
+```powershell
+Set-Location .\app
+flutter pub get
+flutter run -d chrome
+```
+
+Flutter Web and Windows desktop default to `http://127.0.0.1:8000`; the Android emulator uses `http://10.0.2.2:8000`. The backend allows local `localhost` and `127.0.0.1` origins for Web development. For a physical device, configure the computer's LAN IP in the login or profile API settings. See [`app/README.md`](app/README.md) for prerequisites, Android/Windows instructions, and troubleshooting.
 
 ## API implementation map
 

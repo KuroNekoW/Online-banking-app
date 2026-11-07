@@ -5,6 +5,7 @@ from app.api.admin import router as admin_router
 from app.api.customer import router as customer_router
 from app.api.transfers import router as transfers_router
 from app.core.config import get_settings
+from fastapi.middleware.cors import CORSMiddleware
 
 settings = get_settings()
 app = FastAPI(title=settings.app_name, version="0.1.0")
@@ -17,3 +18,13 @@ app.include_router(admin_router)
 @app.get("/health", tags=["system"])
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
