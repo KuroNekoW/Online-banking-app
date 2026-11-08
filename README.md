@@ -1,347 +1,297 @@
-# Hệ thống Ngân hàng Trực tuyến trên Di động
+Note: README.txt để mô tả step by step cho ae đọc để update tình hình, cái README này để làm production
 
-Đây là đồ án SE113 xây dựng một ứng dụng ngân hàng trực tuyến mô phỏng. Dự án gồm ứng dụng Flutter, API FastAPI và cơ sở dữ liệu PostgreSQL. Người dùng có thể đăng ký, xác thực OTP, xem tài khoản và lịch sử giao dịch, quản lý người thụ hưởng, thực hiện chuyển khoản nội bộ và nhận thông báo.
+# Online Banking App
 
-> **Lưu ý:** Đây là sản phẩm phục vụ học tập và phát triển local, không kết nối ngân hàng thật, không xử lý tiền thật và chưa sẵn sàng cho môi trường production.
+Hệ thống ngân hàng trực tuyến trên di động (đồ án SE113), gồm ứng dụng **Flutter**, API **FastAPI** và cơ sở dữ liệu **PostgreSQL**. Hệ thống hỗ trợ đăng ký có xác thực OTP, quản lý tài khoản và lịch sử giao dịch, quản lý người thụ hưởng, chuyển khoản nội bộ có xác nhận OTP, thông báo và các chức năng quản trị.
+
+> **Phạm vi:** Dự án mô phỏng nghiệp vụ ngân hàng cho mục đích học tập và phát triển local. Không kết nối ngân hàng thật, không xử lý tiền thật. Xem [Production readiness](#production-readiness) trước khi cân nhắc triển khai.
 
 ## Mục lục
 
-- [Tổng quan kiến trúc](#tổng-quan-kiến-trúc)
-- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
-- [Môi trường và công nghệ](#môi-trường-và-công-nghệ)
-- [Cài đặt công cụ](#cài-đặt-công-cụ)
-- [Chạy toàn bộ dự án lần đầu](#chạy-toàn-bộ-dự-án-lần-đầu)
-- [Chạy ứng dụng Flutter](#chạy-ứng-dụng-flutter)
-- [Tài khoản demo và OTP](#tài-khoản-demo-và-otp)
-- [Chạy kiểm thử](#chạy-kiểm-thử)
-- [Lỗi thường gặp](#lỗi-thường-gặp)
-- [Hướng cải thiện](#hướng-cải-thiện)
+- [Kiến trúc](#kiến-trúc)
+- [Công nghệ](#công-nghệ)
+- [Cấu trúc repository](#cấu-trúc-repository)
+- [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
+- [Khởi chạy nhanh](#khởi-chạy-nhanh)
+- [Cấu hình](#cấu-hình)
+- [Backend](#backend)
+- [Frontend](#frontend)
+- [Dữ liệu demo](#dữ-liệu-demo)
+- [Quy tắc nghiệp vụ và bảo mật](#quy-tắc-nghiệp-vụ-và-bảo-mật)
+- [Kiểm thử](#kiểm-thử)
+- [Vận hành và xử lý sự cố](#vận-hành-và-xử-lý-sự-cố)
+- [Production readiness](#production-readiness)
+- [Tài liệu liên quan](#tài-liệu-liên-quan)
 
-## Tổng quan kiến trúc
+## Kiến trúc
 
 ```text
-Flutter (app/)  ── HTTP/JSON ──>  FastAPI (backend/)  ──>  PostgreSQL
-                                       │
-                                       └── SMTP local ──> Mailpit (email OTP)
+Flutter client ──HTTPS/JSON──▶ FastAPI ──▶ PostgreSQL
+ (app/)                        (backend/)      ▲
+                                  │            └── Alembic migrations
+                                  └── SMTP ──▶ Mailpit (dev) / nhà cung cấp email-SMS (prod)
 ```
 
-- **Flutter** cung cấp giao diện trên trình duyệt Chrome, Android và Windows.
-- **FastAPI** cung cấp API đăng nhập, tài khoản, người thụ hưởng, chuyển khoản và quản trị. Có thể xem danh sách API tại `http://127.0.0.1:8000/docs`.
-- **PostgreSQL** lưu thông tin người dùng, tài khoản và các bút toán.
-- **Alembic** tự chạy các bản migration để tạo/cập nhật cấu trúc cơ sở dữ liệu khi API khởi động.
-- **Mailpit** nhận email OTP trong môi trường local. Email không được gửi đến hộp thư thật.
-- **Docker Compose** khởi chạy API, PostgreSQL và Mailpit cùng lúc, không cần cài PostgreSQL hay Python riêng để chạy ứng dụng.
+| Thành phần | Trách nhiệm |
+| --- | --- |
+| **Flutter client** | Giao diện đa nền tảng (Web, Android, Windows); quản lý trạng thái bằng Provider |
+| **FastAPI** | Xác thực, nghiệp vụ tài khoản, chuyển khoản, quản trị; tài liệu OpenAPI tại `/docs` |
+| **PostgreSQL** | Lưu người dùng, tài khoản, bút toán sổ cái, người thụ hưởng, nhật ký kiểm toán |
+| **Alembic** | Quản lý phiên bản schema; migration được áp dụng khi API khởi động |
+| **Mailpit** | SMTP sandbox cho môi trường dev, dùng để xem OTP |
 
-## Cấu trúc thư mục
+## Công nghệ
+
+| Lớp | Stack |
+| --- | --- |
+| Frontend | Flutter, Dart (SDK ≥ 3.0.0), Material, Provider, `http`, `shared_preferences`, `intl` |
+| Backend | Python 3.13, FastAPI, Uvicorn, Pydantic Settings |
+| Dữ liệu | PostgreSQL 16, SQLAlchemy 2, psycopg 3, Alembic |
+| Bảo mật | PyJWT (access/refresh token), Argon2 (băm mật khẩu) |
+| Hạ tầng | Docker, Docker Compose |
+| Kiểm thử | pytest, HTTPX (backend); `flutter test` (frontend) |
+
+Phiên bản thư viện Python được ghim trong `backend/requirements.txt`.
+
+## Cấu trúc repository
 
 ```text
 Online-banking-app/
-├── app/                         # Ứng dụng giao diện Flutter
+├── app/                  # Flutter client
 │   ├── lib/
-│   │   ├── core/                # Cấu hình API, mạng, lưu trữ, giao diện và tiện ích
-│   │   ├── models/              # Các đối tượng dữ liệu như tài khoản, giao dịch, người dùng
-│   │   ├── providers/           # Quản lý trạng thái đăng nhập và dữ liệu ngân hàng
-│   │   ├── screens/             # Các màn hình trong ứng dụng
-│   │   ├── services/            # Gọi API xác thực, ngân hàng và chuyển khoản
-│   │   ├── widgets/             # Thành phần giao diện có thể dùng lại
-│   │   └── main.dart            # Điểm bắt đầu ứng dụng Flutter
-│   ├── test/                    # Kiểm thử Flutter
-│   ├── android/, windows/, web/ # Cấu hình chạy trên từng nền tảng
-│   ├── pubspec.yaml             # Dependency và cấu hình Flutter
-│   └── FE_README.md             # Hướng dẫn chi tiết riêng cho frontend
+│   │   ├── core/         # Cấu hình API, mạng, lưu trữ, theme, tiện ích
+│   │   ├── models/       # Domain models
+│   │   ├── providers/    # State management (auth, banking)
+│   │   ├── screens/      # Màn hình
+│   │   ├── services/     # API client (auth, banking, transfer)
+│   │   └── widgets/      # Component dùng lại
+│   ├── test/
+│   └── FE_README.md      # Tài liệu chi tiết frontend
 ├── backend/
 │   ├── app/
-│   │   ├── api/                 # Các endpoint FastAPI
-│   │   ├── core/                # Cấu hình và tiện ích bảo mật
-│   │   ├── db/                  # Kết nối và mô hình SQLAlchemy
-│   │   ├── schemas/             # Cấu trúc dữ liệu đầu vào/đầu ra API
-│   │   ├── scripts/             # Lệnh khởi tạo dữ liệu mẫu
-│   │   └── services/            # Nghiệp vụ như OTP và gửi email
-│   ├── alembic/                 # Quản lý phiên bản cấu trúc database
-│   ├── tests/                   # Kiểm thử API và nghiệp vụ backend
-│   ├── main.py                  # Khởi tạo FastAPI và đăng ký router
-│   ├── requirements.txt         # Các thư viện Python
-│   └── Dockerfile               # Cách đóng gói backend thành Docker image
-├── docs/                        # Tài liệu yêu cầu và sơ đồ cơ sở dữ liệu
-├── .env.example                 # Mẫu biến môi trường cho Docker Compose
-└── docker-compose.yml           # Khai báo các dịch vụ chạy local
+│   │   ├── api/          # Endpoint FastAPI
+│   │   ├── core/         # Cấu hình, bảo mật
+│   │   ├── db/           # Session và mô hình SQLAlchemy
+│   │   ├── schemas/      # Pydantic request/response
+│   │   ├── scripts/      # Seed dữ liệu
+│   │   └── services/     # Nghiệp vụ (OTP, email, ...)
+│   ├── alembic/          # Migrations
+│   ├── tests/
+│   ├── main.py
+│   ├── requirements.txt
+│   └── Dockerfile
+├── docs/                 # Đặc tả yêu cầu, ERD
+├── .env.example
+└── docker-compose.yml
 ```
 
-## Môi trường và công nghệ
+## Yêu cầu hệ thống
 
-| Thành phần                | Công nghệ                                | Vai trò                                                              |
-| --------------------------- | ------------------------------------------ | --------------------------------------------------------------------- |
-| Frontend                    | Flutter, Dart, Material, Provider          | Giao diện và quản lý trạng thái                                 |
-| HTTP và lưu trữ frontend | `http`, `shared_preferences`, `intl` | Gọi API, lưu tùy chọn/phiên đăng nhập, định dạng dữ liệu |
-| Backend                     | Python 3.13, FastAPI, Uvicorn              | Xây dựng và chạy API                                              |
-| Kiểm tra dữ liệu         | Pydantic Settings, Email Validator         | Cấu hình môi trường và xác thực dữ liệu                     |
-| Cơ sở dữ liệu           | PostgreSQL 16, SQLAlchemy 2, psycopg 3     | Lưu dữ liệu và truy vấn                                          |
-| Migration                   | Alembic                                    | Tạo và cập nhật schema                                            |
-| Bảo mật                   | PyJWT, Argon2                              | Token xác thực và băm mật khẩu                                  |
-| Email phát triển          | Mailpit                                    | Hộp thư local để xem OTP                                          |
-| Đóng gói                 | Docker, Docker Compose                     | Chạy backend và dịch vụ phụ trợ                                 |
-| Kiểm thử backend          | pytest, HTTPX                              | Kiểm thử API và nghiệp vụ                                        |
+| Công cụ | Dùng cho | Ghi chú |
+| --- | --- | --- |
+| Docker Desktop / Docker Engine + Compose v2 | Backend, PostgreSQL, Mailpit | Bắt buộc. Không cần cài Python hay PostgreSQL trên host |
+| Flutter SDK (stable, tương thích Dart ≥ 3.0.0) | Frontend | Xác minh bằng `flutter doctor` |
+| Google Chrome | Chạy Flutter Web | Target mặc định cho phát triển |
+| Android Studio + SDK | Chạy Android | Tùy chọn |
+| Toolchain Windows desktop | Chạy Windows | Tùy chọn |
 
-Phiên bản Python trong image backend là **3.13**. `pubspec.yaml` khai báo Dart SDK từ `3.0.0` trở lên; nên cài Flutter SDK ổn định mới nhất tương thích với phiên bản Dart đó. Phiên bản thư viện Python cụ thể được ghim trong `backend/requirements.txt`.
+## Khởi chạy nhanh
 
-## Cài đặt công cụ
-
-Các hướng dẫn lệnh bên dưới sử dụng **Windows PowerShell**.
-
-### Công cụ cần thiết
-
-1. **Git** (tùy chọn nếu bạn đã có mã nguồn): cài từ [git-scm.com](https://git-scm.com/download/win).
-2. **Docker Desktop**: cài từ [docker.com](https://www.docker.com/products/docker-desktop/). Mở Docker Desktop và chờ Docker Engine khởi động hoàn tất. Docker Desktop sẽ chạy API, PostgreSQL và Mailpit.
-3. **Flutter SDK**: cài theo [hướng dẫn chính thức cho Windows](https://docs.flutter.dev/get-started/install/windows), rồi thêm thư mục `flutter\bin` vào biến môi trường `Path`.
-4. **Google Chrome**: cần nếu muốn chạy ứng dụng trên Chrome. Đây là cách đơn giản nhất để bắt đầu.
-5. **Android Studio** (chỉ khi muốn chạy Android): cài Android SDK và tạo máy ảo trong **Device Manager**.
-
-Không cần cài Python, PostgreSQL hay Mailpit riêng nếu chạy backend bằng Docker Compose.
-
-### Kiểm tra công cụ
-
-Mở **PowerShell mới** sau khi cài Flutter để cập nhật `Path`, rồi chạy:
+Các lệnh dưới đây viết cho PowerShell; trên Linux/macOS dùng `cp` thay cho `Copy-Item`.
 
 ```powershell
-git --version
-docker --version
-docker compose version
-flutter --version
-flutter doctor
-```
-
-`flutter doctor` hiển thị những thành phần Flutter còn thiếu. Chạy trên Chrome chỉ cần Flutter và Chrome; chạy Android cần thêm Android toolchain và emulator/thiết bị. Nếu PowerShell báo không nhận ra `flutter` hoặc `docker`, kiểm tra lại cài đặt/`Path` và khởi động lại terminal hoặc Docker Desktop.
-
-## Chạy toàn bộ dự án lần đầu
-
-### Bước 1: Mở thư mục dự án
-
-Nếu dự án nằm ở đường dẫn mặc định trong máy của bạn:
-
-```powershell
-Set-Location 'D:\SE113\Project\Online-banking-app'
-```
-
-Nếu bạn đã tải/cloned dự án ở nơi khác, thay đường dẫn trên bằng đường dẫn thực tế. Kiểm tra đang ở đúng thư mục:
-
-```powershell
-Get-ChildItem
-```
-
-Bạn cần thấy `app`, `backend`, `docker-compose.yml` và `.env.example`.
-
-### Bước 2: Tạo cấu hình local
-
-Tạo file cấu hình từ mẫu:
-
-```powershell
+# 1. Tạo cấu hình môi trường (không ghi đè nếu .env đã tồn tại)
 Copy-Item .env.example .env
-```
 
-Mở `.env` bằng VS Code hoặc trình soạn thảo văn bản. Đặt mật khẩu database và `JWT_SECRET_KEY` riêng cho máy của bạn; secret nên dài, ngẫu nhiên và không được đưa lên Git. Các giá trị mẫu chỉ dùng để học/chạy local. Không dùng chúng khi triển khai thật.
-
-Nếu `.env` đã tồn tại, không chạy lại lệnh copy để tránh ghi đè cấu hình của bạn. Docker Compose có giá trị mặc định để tiện chạy thử, nhưng nên tạo `.env` riêng trước khi sử dụng.
-
-### Bước 3: Khởi chạy backend và các dịch vụ
-
-Trong PowerShell tại thư mục gốc dự án, chạy:
-
-```powershell
+# 2. Khởi chạy backend stack (API + PostgreSQL + Mailpit)
 docker compose up --build -d
-```
 
-Lần đầu Docker cần tải image và cài các thư viện backend nên có thể mất vài phút. Lệnh này chạy ở chế độ nền. Kiểm tra trạng thái:
+# 3. Kiểm tra
+Invoke-RestMethod http://127.0.0.1:8000/health      # { "status": "ok" }
 
-```powershell
-docker compose ps
-```
-
-Đợi PostgreSQL healthy và API hoạt động, sau đó kiểm tra:
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:8000/health
-```
-
-Kết quả mong đợi có `status` là `ok`. Bạn cũng có thể mở:
-
-- Tài liệu API: `http://127.0.0.1:8000/docs`
-- Hộp thư OTP local: `http://127.0.0.1:8025`
-
-API tự chạy Alembic migration và tạo dữ liệu seed khi khởi động. Nếu API chưa sẵn sàng, xem log bằng `docker compose logs -f api`; nhấn `Ctrl+C` để ngừng theo dõi log (không dừng container).
-
-## Chạy ứng dụng Flutter
-
-Giữ backend đang chạy. Mở **cửa sổ PowerShell thứ hai**, chuyển vào thư mục frontend và tải dependencies:
-
-```powershell
-Set-Location 'D:\SE113\Project\Online-banking-app\app'
+# 4. Chạy client
+Set-Location app
 flutter pub get
-```
-
-Nếu dự án nằm nơi khác, dùng đường dẫn thực tế tương ứng.
-
-### Chạy trên Chrome (khuyến nghị)
-
-```powershell
 flutter run -d chrome
 ```
 
-Flutter sẽ biên dịch ứng dụng và mở trình duyệt. Nếu không tìm thấy Chrome, kiểm tra Chrome đã cài chưa và xem thiết bị Flutter nhận diện được:
+| Endpoint | URL |
+| --- | --- |
+| API | `http://127.0.0.1:8000` |
+| OpenAPI / Swagger | `http://127.0.0.1:8000/docs` |
+| Health check | `http://127.0.0.1:8000/health` |
+| Mailpit (OTP dev) | `http://127.0.0.1:8025` |
+
+Khi khởi động, API tự động áp dụng migration Alembic và (nếu bật) nạp dữ liệu demo.
+
+## Cấu hình
+
+Cấu hình được nạp từ biến môi trường, mẫu tại `.env.example`. Docker Compose đọc file `.env` ở thư mục gốc.
+
+| Biến | Mô tả |
+| --- | --- |
+| `JWT_SECRET_KEY` | Khóa ký token. Phải dài, ngẫu nhiên, duy nhất cho từng môi trường |
+| Thông tin PostgreSQL | User, mật khẩu, tên database cho service `postgres` |
+| `SEED_DEMO_DATA` | `true` để nạp dữ liệu demo khi khởi động; phải là `false` ngoài môi trường dev |
+| Cấu hình SMTP | Host/port của dịch vụ gửi OTP (mặc định trỏ tới Mailpit) |
+
+Yêu cầu bắt buộc:
+
+- Không commit `.env` hoặc bất kỳ secret nào lên Git.
+- Không dùng giá trị mẫu trong `.env.example` ở bất kỳ môi trường nào ngoài local.
+- Đặt `SEED_DEMO_DATA=false` rồi tạo lại container (`docker compose up -d --force-recreate api`) để tắt seed. Thao tác này không xóa dữ liệu đã có.
+
+## Backend
+
+### Vận hành bằng Docker Compose
 
 ```powershell
-flutter devices
+docker compose up --build -d      # khởi chạy / cập nhật
+docker compose ps                 # trạng thái dịch vụ
+docker compose logs -f api        # theo dõi log API
+docker compose down               # dừng, giữ nguyên volume dữ liệu
 ```
 
-### Chạy trên Android Emulator
+> `docker compose down -v` xóa volume và toàn bộ dữ liệu database local. Chỉ dùng khi chủ ý reset.
 
-1. Mở Android Studio và khởi động máy ảo từ **Device Manager**.
-2. Trong terminal tại thư mục `app`, kiểm tra thiết bị:
+### Migration
 
-   ```powershell
-   flutter devices
-   ```
-3. Chạy ứng dụng:
+Schema được quản lý hoàn toàn bằng Alembic:
 
-   ```powershell
-   flutter run
-   ```
+- Mọi thay đổi schema phải đi kèm một migration **mới**; không sửa migration đã được chia sẻ.
+- Cập nhật test tương ứng và chạy lại toàn bộ bộ test backend trước khi merge.
 
-### Chạy trên Windows desktop
+### Nhóm API
 
-Cần cài Windows desktop toolchain theo hướng dẫn Flutter, sau đó chạy:
+`/docs` là nguồn tham chiếu chính xác cho request/response.
+
+| Nhóm | Chức năng |
+| --- | --- |
+| Hệ thống | `GET /health` |
+| Xác thực | Đăng ký, xác thực/gửi lại OTP, đăng nhập, refresh/logout, đặt lại và đổi mật khẩu |
+| Khách hàng | Hồ sơ, tài khoản và số dư, người thụ hưởng, lịch sử giao dịch, thông báo |
+| Chuyển khoản | Tạo, xác nhận OTP, xác thực, tra cứu |
+| Quản trị | Danh sách/chi tiết khách hàng, khóa/mở khóa, phân quyền, nhật ký kiểm toán |
+
+## Frontend
+
+Chi tiết xem [`app/FE_README.md`](app/FE_README.md).
 
 ```powershell
-flutter run -d windows
+Set-Location app
+flutter pub get
+flutter run -d chrome        # hoặc: -d windows | thiết bị/emulator Android
 ```
 
-### Địa chỉ API theo nền tảng
+### Base URL của API theo nền tảng
 
-| Nơi chạy ứng dụng | Địa chỉ API mặc định                                   |
-| --------------------- | ------------------------------------------------------------ |
-| Chrome / Flutter Web  | `http://127.0.0.1:8000`                                    |
-| Windows desktop       | `http://127.0.0.1:8000`                                    |
-| Android Emulator      | `http://10.0.2.2:8000`                                     |
-| Điện thoại thật   | IP LAN của máy tính, ví dụ `http://192.168.1.20:8000` |
+Giá trị mặc định khai báo tại `app/lib/core/constants/api_constants.dart`.
 
-Các giá trị mặc định được khai báo trong `app/lib/core/constants/api_constants.dart`. Để dùng điện thoại thật, điện thoại và máy tính cần cùng mạng Wi-Fi; cấu hình base URL thành IP LAN của máy tính (có thể tìm bằng `ipconfig`), không dùng `127.0.0.1`. Không mở API ra Internet.
+| Nền tảng | Base URL |
+| --- | --- |
+| Web / Windows | `http://127.0.0.1:8000` |
+| Android Emulator | `http://10.0.2.2:8000` |
+| Thiết bị thật | `http://<IP-LAN-của-máy-chủ>:8000` (cùng mạng, firewall cho phép cổng 8000) |
 
-## Tài khoản demo và OTP
+CORS của API chỉ chấp nhận origin `localhost` / `127.0.0.1`. Không public API ra Internet khi chạy cấu hình dev.
 
-Compose bật dữ liệu demo mặc định (`SEED_DEMO_DATA=true`). Có thể đăng nhập bằng:
+## Dữ liệu demo
 
-| Email                        | Mật khẩu           | Số tài khoản  | Số dư ban đầu |
-| ---------------------------- | -------------------- | ---------------- | ----------------: |
-| `alice.demo@banking.local` | `DemoCustomer123!` | `100000000001` |     1.000.000 VND |
-| `bob.demo@banking.local`   | `DemoCustomer123!` | `100000000002` |       500.000 VND |
+Khi `SEED_DEMO_DATA=true`, hệ thống tạo hai khách hàng (seed idempotent, không cộng dồn khi khởi động lại):
 
-Hai tài khoản demo có thể chuyển khoản nội bộ cho nhau. Đây là dữ liệu local; không sử dụng thông tin này trên hệ thống thật. Dữ liệu seed không bị cộng lặp lại khi API khởi động lại. Để tắt việc tạo dữ liệu demo trong lần chạy sau, đặt `SEED_DEMO_DATA=false` trong `.env` rồi tạo lại container API:
+| Email | Mật khẩu | Số tài khoản | Số dư ban đầu |
+| --- | --- | --- | ---: |
+| `alice.demo@banking.local` | `DemoCustomer123!` | `100000000001` | 1.000.000 VND |
+| `bob.demo@banking.local` | `DemoCustomer123!` | `100000000002` | 500.000 VND |
+
+OTP (đăng ký, xác nhận chuyển khoản) được gửi tới Mailpit tại `http://127.0.0.1:8025`. Không có email nào được gửi tới hộp thư thật.
+
+## Quy tắc nghiệp vụ và bảo mật
+
+Các ràng buộc sau là bất biến của hệ thống và phải được giữ khi thay đổi mã nguồn:
+
+**Sổ cái**
+- Số dư được suy ra từ `transaction_entries`; không lưu số dư có thể sửa trực tiếp trên tài khoản.
+- Tổng bút toán của mỗi giao dịch đã ghi sổ bằng 0.
+- Bút toán đã ghi sổ là bất biến; sửa sai bằng giao dịch đảo.
+
+**Phân quyền và dữ liệu**
+- Mọi truy vấn tài khoản, giao dịch, người thụ hưởng đều giới hạn theo người dùng đã xác thực; không tin `user_id` do client gửi.
+- API quản trị kiểm tra quyền Admin ở phía server.
+- Khóa khách hàng thu hồi toàn bộ phiên đăng nhập đang hoạt động.
+
+**Thông tin xác thực**
+- Mật khẩu băm bằng Argon2.
+- OTP và refresh token chỉ lưu dạng hash.
+- Không ghi OTP hoặc token vào log ở môi trường production.
+
+## Kiểm thử
+
+### Frontend
 
 ```powershell
-docker compose up -d --force-recreate api
-```
-
-Tắt seed không xóa dữ liệu demo đã có trong database.
-
-OTP được gửi tới Mailpit thay vì email thật. Mở `http://localhost:8025`, tìm email mới nhất của tài khoản rồi nhập mã sáu chữ số vào ứng dụng. Luồng này áp dụng cho đăng ký và xác nhận chuyển khoản.
-
-## Chạy kiểm thử
-
-### Kiểm tra frontend
-
-Từ thư mục `app/`:
-
-```powershell
+Set-Location app
 flutter analyze
 flutter test
 ```
 
-Test Flutter hiện có là smoke test kiểm tra ứng dụng khởi tạo.
+Hiện tại frontend mới có smoke test khởi tạo ứng dụng.
 
-### Kiểm thử backend
+### Backend
 
-Từ thư mục gốc, khởi chạy PostgreSQL riêng dành cho test:
+Bộ test dùng database `banking_test` riêng (service `postgres-test`, map ra host cổng `5433`), chạy migration thật, làm sạch dữ liệu trước mỗi test case và giả lập dịch vụ gửi OTP.
 
 ```powershell
+# Khởi động database test
 docker compose --profile test up -d postgres-test
-```
 
-Sau đó chạy bộ test trong container backend. Test sử dụng database `banking_test` riêng ở port nội bộ `5432` của service `postgres-test`, được ánh xạ ra máy host ở port `5433`; không trỏ test vào database phát triển:
+# Chạy test
+docker compose run --rm `
+  -e PYTHONPATH=/code `
+  -e SEED_DEMO_DATA=false `
+  -e TEST_DATABASE_URL=postgresql+psycopg://banking_test:banking_test_password@postgres-test:5432/banking_test `
+  api pytest -q
 
-```powershell
-docker compose run --rm -e PYTHONPATH=/code -e SEED_DEMO_DATA=false -e TEST_DATABASE_URL=postgresql+psycopg://banking_test:banking_test_password@postgres-test:5432/banking_test api pytest -q
-```
-
-Muốn xem tên từng test:
-
-```powershell
-docker compose run --rm -e PYTHONPATH=/code -e TEST_DATABASE_URL=postgresql+psycopg://banking_test:banking_test_password@postgres-test:5432/banking_test api pytest -vv -s
-```
-
-Test chạy migration thật, làm sạch dữ liệu trong database test trước mỗi trường hợp và thay dịch vụ gửi OTP bằng giả lập. Khi kiểm thử xong, có thể xóa container PostgreSQL test:
-
-```powershell
+# Dọn dẹp
 docker compose --profile test rm -s -f postgres-test
 ```
 
-## API và quy tắc nghiệp vụ quan trọng
+Thêm `-vv -s` vào `pytest` để xem chi tiết từng test. Không trỏ `TEST_DATABASE_URL` vào database phát triển.
 
-Tài liệu OpenAPI tại `/docs` là nguồn tham khảo chính xác cho request/response.
+## Vận hành và xử lý sự cố
 
-| Nhóm          | Chức năng chính                                                                              |
-| -------------- | ----------------------------------------------------------------------------------------------- |
-| Hệ thống     | `GET /health`                                                                                 |
-| Xác thực     | Đăng ký, xác thực/gửi lại OTP, đăng nhập, refresh/logout, đặt lại/đổi mật khẩu |
-| Khách hàng   | Hồ sơ, tài khoản/số dư, người thụ hưởng, lịch sử giao dịch, thông báo           |
-| Chuyển khoản | Tạo, xác nhận OTP, xác thực và tra cứu chuyển khoản                                    |
-| Quản trị     | Danh sách/chi tiết khách hàng, khóa/mở khóa, phân quyền và nhật ký kiểm toán      |
+| Triệu chứng | Nguyên nhân thường gặp / Xử lý |
+| --- | --- |
+| `docker` không nhận diện, daemon không chạy | Docker Engine chưa khởi động; mở Docker Desktop, mở lại terminal |
+| API từ chối kết nối / container thoát liên tục | Kiểm tra `docker compose logs --tail 100 api`; thường do PostgreSQL chưa healthy hoặc `.env` không khớp |
+| `port is already allocated` | Xung đột cổng 8000, 5432, 5433 hoặc 8025; giải phóng cổng hoặc đổi port host trong `docker-compose.yml`/`.env` |
+| Không nhận được OTP | Xác nhận Mailpit đang chạy (`docker compose ps`) và kiểm tra `http://127.0.0.1:8025` |
+| Android Emulator không gọi được API | Dùng `10.0.2.2` thay cho `localhost`/`127.0.0.1` |
+| Thiết bị thật không gọi được API | Dùng IP LAN, cùng mạng, firewall cho phép cổng 8000 |
+| Lỗi CORS trên trình duyệt | Truy cập bằng origin `localhost`/`127.0.0.1` do `flutter run -d chrome` cung cấp |
+| Flutter không thấy thiết bị | Chạy `flutter doctor` và `flutter devices` |
 
-Khi sửa phần chuyển khoản hoặc sổ cái, cần giữ các nguyên tắc sau:
+## Production readiness
 
-- Số dư được tính từ `transaction_entries`; không thêm số dư có thể thay đổi trực tiếp trên tài khoản.
-- Tổng các bút toán của một giao dịch đã ghi sổ phải bằng không. Sửa sai bằng giao dịch đảo, không chỉnh bút toán đã ghi sổ.
-- Mọi dữ liệu tài khoản, giao dịch và người thụ hưởng phải được giới hạn theo người dùng đã xác thực; không tin `user_id` do client gửi.
-- Khóa khách hàng phải thu hồi phiên đăng nhập đang hoạt động; API quản trị cần kiểm tra quyền Admin.
-- OTP và refresh token được lưu dạng hash. Không trả hoặc ghi OTP vào log trong môi trường production.
+Dự án **chưa** sẵn sàng cho production. Các hạng mục cần hoàn thành trước khi triển khai thực tế:
 
-## Lỗi thường gặp
+**Bảo mật và hạ tầng**
+- Cấu hình production tách biệt: HTTPS/TLS, quản lý secret (vault/secret manager), giới hạn truy cập mạng, CORS theo domain thực.
+- Thay Mailpit bằng nhà cung cấp email/SMS có xác thực; theo dõi và cảnh báo lỗi gửi OTP.
+- Thực thi ngưỡng đăng nhập sai và khóa tài khoản theo cấu hình; rate limiting cho OTP và các endpoint nhạy cảm.
+- Logging có cấu trúc, monitoring, sao lưu/khôi phục database, rà soát bảo mật độc lập.
 
-| Lỗi / dấu hiệu                                    | Cách kiểm tra và xử lý                                                                                                                                                                        |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docker` không được nhận diện                | Mở Docker Desktop, chờ Engine chạy; mở PowerShell mới và thử `docker --version`.                                                                                                          |
-| Docker daemon không chạy                           | Khởi động Docker Desktop rồi kiểm tra `docker compose ps`.                                                                                                                                  |
-| API không phản hồi hoặc `Connection refused`   | Chạy `docker compose ps`, xem `docker compose logs -f api`, rồi thử lại `/health` khi API đã khởi động xong.                                                                        |
-| Container API thoát liên tục                      | Xem log bằng `docker compose logs --tail 100 api`. Lỗi kết nối database thường do PostgreSQL chưa healthy hoặc cấu hình `.env` không khớp.                                         |
-| `port is already allocated`                        | Một ứng dụng khác đang dùng port 8000, 5432, 5433 hoặc 8025. Dừng ứng dụng đó hoặc chỉnh port host trong `docker-compose.yml`/`.env` rồi chạy lại.                            |
-| Không nhận được OTP                             | Kiểm tra `docker compose ps` có Mailpit đang chạy không, rồi xem `http://localhost:8025`. OTP local không được gửi đến email thật.                                               |
-| Frontend không kết nối API trên Android Emulator | Dùng `http://10.0.2.2:8000`, không dùng `localhost` hoặc `127.0.0.1` trong emulator.                                                                                                     |
-| Điện thoại thật không kết nối API             | Dùng IP LAN của máy tính, đảm bảo hai thiết bị chung Wi-Fi và firewall cho phép kết nối tới port 8000 trên mạng riêng.                                                            |
-| Lỗi CORS trên trình duyệt                        | Dùng URL frontend local do `flutter run -d chrome` cung cấp; API hiện chỉ cho phép origin `localhost`/`127.0.0.1` trên HTTP(S).                                                        |
-| Flutter không thấy thiết bị                      | Chạy `flutter doctor` và `flutter devices`; kiểm tra Chrome đã cài hoặc emulator đã khởi động.                                                                                     |
-| Muốn khởi động lại từ đầu                    | Dùng `docker compose down` rồi `docker compose up --build -d`. Lệnh `down` giữ volume database; **không** dùng `docker compose down -v` trừ khi chủ ý xóa dữ liệu local. |
+**Nghiệp vụ**
+- Hoàn thiện đối soát chuyển khoản liên ngân hàng (chuyển trạng thái chờ xử lý sang thành công/thất bại).
+- Chuẩn hóa Pydantic response schema cho toàn bộ endpoint và validate đầu vào nhất quán.
 
-Kết thúc phiên làm việc, nhấn `q` hoặc `Ctrl+C` trong terminal đang chạy Flutter. Dừng các dịch vụ backend bằng lệnh tại thư mục gốc:
-
-```powershell
-docker compose down
-```
-
-## Hướng cải thiện
-
-Các việc nên cân nhắc trước khi dùng dự án trong môi trường thực tế:
-
-1. Bổ sung kiểm thử cho refresh/logout, đặt lại mật khẩu, giới hạn OTP, thông báo, phân trang, phân quyền, audit log và các trạng thái chuyển khoản liên ngân hàng.
-2. Thực thi ngưỡng đăng nhập sai và khóa tài khoản theo cấu hình.
-3. Thay Mailpit bằng nhà cung cấp email/SMS có xác thực; quản lý secret an toàn và bổ sung theo dõi lỗi gửi OTP.
-4. Hoàn thiện đối soát cho chuyển khoản liên ngân hàng để cập nhật trạng thái đang chờ thành thành công hoặc thất bại.
-5. Chuẩn hóa response schema Pydantic cho tất cả endpoint và bổ sung kiểm tra dữ liệu đầu vào nhất quán.
-6. Thêm CI để chạy test backend với PostgreSQL và test/lint Flutter cho mỗi pull request.
-7. Bổ sung cấu hình production riêng: HTTPS, secret management, logging/monitoring, sao lưu/khôi phục database, giới hạn truy cập và rà soát bảo mật.
-8. Cải thiện test giao diện và tích hợp frontend với API cho các luồng đăng ký, đăng nhập, chuyển khoản và lỗi mạng.
-
-Khi thay đổi schema, tạo migration Alembic mới thay vì sửa migration đã được dùng chung; cập nhật test tương ứng và chạy lại bộ kiểm thử backend.
+**Chất lượng**
+- Mở rộng test backend: refresh/logout, đặt lại mật khẩu, giới hạn OTP, thông báo, phân trang, phân quyền, audit log, trạng thái chuyển khoản liên ngân hàng.
+- Bổ sung test giao diện và test tích hợp frontend–API (đăng ký, đăng nhập, chuyển khoản, lỗi mạng).
+- Thiết lập CI: chạy test backend với PostgreSQL, `flutter analyze` và `flutter test` cho mỗi pull request.
 
 ## Tài liệu liên quan
 
-- Hướng dẫn frontend chi tiết: [`app/FE_README.md`](app/FE_README.md)
+- Frontend: [`app/FE_README.md`](app/FE_README.md)
 - Đặc tả dự án: [`docs/docs.docx`](docs/docs.docx)
-- Mã nguồn sơ đồ ERD: [`docs/database-erd.puml`](docs/database-erd.puml)
+- Sơ đồ ERD (PlantUML): [`docs/database-erd.puml`](docs/database-erd.puml)
