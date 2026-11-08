@@ -1,0 +1,10 @@
+﻿Test Case ID,Pytest Script,Status,Duration (s),Details
+TC_AUTH_02,test_tc_auth_02_login_success,PASSED,0.877,
+TC_AUTH_05,test_tc_auth_05_logout_revokes_session,PASSED,0.486,
+TC_ACCT_01,test_tc_acct_01_list_accounts_balance,PASSED,0.510,
+TC_ACCT_03,test_tc_acct_03_view_profile,PASSED,0.479,
+TC_ACCT_05,test_tc_acct_05_cannot_view_other_account,PASSED,0.468,
+TC_TRSF_02,test_tc_trsf_02_reject_insufficient_balance,PASSED,0.491,
+TC_TRSF_03,test_tc_trsf_03_reject_zero,PASSED,0.483,
+TC_TRSF_14,test_tc_trsf_14_reject_negative,PASSED,0.440,
+TC_ADM_05,test_tc_adm_05_customer_forbidden_from_admin_roles,PASSED,0.465,

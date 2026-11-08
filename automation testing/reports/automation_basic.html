@@ -1,0 +1,28 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8" />
+<title>SE113 — Automation Test Results</title>
+<style>body{font-family:Arial,sans-serif;max-width:1150px;margin:35px auto;color:#14223b;padding:0 18px}
+header{border-bottom:4px solid #006fb9;padding-bottom:10px}h1{margin-bottom:8px}.muted{color:#65748b}
+.stats{display:flex;gap:14px;flex-wrap:wrap;margin:25px 0}.stat{border:1px solid #d4deeb;padding:16px 24px;border-radius:10px;min-width:125px}
+.stat strong{display:block;font-size:28px;margin-top:7px}table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #d6dfeb;text-align:left;padding:9px;vertical-align:top;word-break:break-word}th{background:#e9f2fb}
+.PASSED{color:#137345;font-weight:bold}.FAILED,.ERROR{color:#b12b2b;font-weight:bold}.SKIPPED{color:#a66705;font-weight:bold}
+.note{background:#f4f7fb;padding:14px;border-left:3px solid #7891b0;margin-top:28px}
+@media print{body{margin:12px}.stats{page-break-inside:avoid}}</style></head>
+<body><header><div class="muted">SE113 · Mobile Online Banking · Nhóm 5</div><h1>Automation Test Execution Report</h1>
+<div class="muted">Nguồn: automation_basic.xml — Tạo từ file kết quả pytest thực tế</div></header>
+<div class="stats"><div class="stat">Total<strong>9</strong></div>
+<div class="stat">Passed<strong>9</strong></div><div class="stat">Failed<strong>0</strong></div>
+<div class="stat">Error<strong>0</strong></div><div class="stat">Skipped<strong>0</strong></div>
+<div class="stat">Pass Rate*<strong>100.0%</strong></div></div>
+<h2>Danh sách kết quả</h2><table><thead><tr><th>Test Case ID</th><th>Pytest Script</th><th>Status</th><th>Duration (s)</th><th>Detail (nếu lỗi)</th></tr></thead><tbody><tr><td>TC_AUTH_02</td><td>test_tc_auth_02_login_success</td><td class="PASSED">PASSED</td><td>0.877</td><td></td></tr>
+<tr><td>TC_AUTH_05</td><td>test_tc_auth_05_logout_revokes_session</td><td class="PASSED">PASSED</td><td>0.486</td><td></td></tr>
+<tr><td>TC_ACCT_01</td><td>test_tc_acct_01_list_accounts_balance</td><td class="PASSED">PASSED</td><td>0.510</td><td></td></tr>
+<tr><td>TC_ACCT_03</td><td>test_tc_acct_03_view_profile</td><td class="PASSED">PASSED</td><td>0.479</td><td></td></tr>
+<tr><td>TC_ACCT_05</td><td>test_tc_acct_05_cannot_view_other_account</td><td class="PASSED">PASSED</td><td>0.468</td><td></td></tr>
+<tr><td>TC_TRSF_02</td><td>test_tc_trsf_02_reject_insufficient_balance</td><td class="PASSED">PASSED</td><td>0.491</td><td></td></tr>
+<tr><td>TC_TRSF_03</td><td>test_tc_trsf_03_reject_zero</td><td class="PASSED">PASSED</td><td>0.483</td><td></td></tr>
+<tr><td>TC_TRSF_14</td><td>test_tc_trsf_14_reject_negative</td><td class="PASSED">PASSED</td><td>0.440</td><td></td></tr>
+<tr><td>TC_ADM_05</td><td>test_tc_adm_05_customer_forbidden_from_admin_roles</td><td class="PASSED">PASSED</td><td>0.465</td><td></td></tr></tbody></table>
+<div class="note"><b>Phạm vi:</b> Kiểm thử API tự động / Backend integration testing; không phải kiểm thử giao diện Flutter. 
+Dữ liệu thực thi trên PostgreSQL kiểm thử riêng. *Pass Rate = Passed/(Passed+Failed+Error); không đồng nghĩa với code coverage.</div>
+</body></html>
