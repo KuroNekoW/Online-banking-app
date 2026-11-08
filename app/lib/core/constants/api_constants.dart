@@ -1,5 +1,4 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 class ApiConstants {
   // Default base URLs depending on environment:
@@ -7,9 +6,9 @@ class ApiConstants {
   // Windows / Web / iOS simulator can connect directly to 127.0.0.1:8000
   static String get defaultBaseUrl {
     if (kIsWeb) return 'http://127.0.0.1:8000';
-    try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:8000';
-    } catch (_) {}
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8000';
+    }
     return 'http://127.0.0.1:8000';
   }
 
@@ -24,6 +23,7 @@ class ApiConstants {
   static const String passwordReset = '/auth/password-reset';
   static const String passwordResetConfirm = '/auth/password-reset/confirm';
   static const String changePassword = '/auth/change-password';
+  static const String health = '/health';
 
   // Customer & Banking endpoints
   static const String profile = '/profile';

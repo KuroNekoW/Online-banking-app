@@ -15,7 +15,13 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> checkAuthStatus() async {
-    final token = StorageService.getAccessToken();
+    String? token;
+    try {
+      token = await StorageService.getAccessToken();
+    } catch (_) {
+      // An uninitialized secure-storage channel (such as a widget-test host) has no session.
+      token = null;
+    }
     if (token == null || token.isEmpty) {
       _isAuthenticated = false;
       _currentUser = null;

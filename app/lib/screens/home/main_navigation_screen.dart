@@ -19,13 +19,14 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
+  final _historyKey = GlobalKey<TransactionHistoryScreenState>();
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    TransferFormScreen(),
-    TransactionHistoryScreen(),
-    NotificationsScreen(),
-    ProfileScreen(),
+  late final List<Widget> _screens = [
+    const HomeScreen(),
+    const TransferFormScreen(),
+    TransactionHistoryScreen(key: _historyKey),
+    const NotificationsScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -60,6 +61,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             setState(() {
               _currentIndex = index;
             });
+            if (index == 2) _historyKey.currentState?.reload();
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,

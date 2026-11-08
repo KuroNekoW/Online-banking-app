@@ -11,10 +11,10 @@ class TransactionHistoryScreen extends StatefulWidget {
   const TransactionHistoryScreen({super.key});
 
   @override
-  State<TransactionHistoryScreen> createState() => _TransactionHistoryScreenState();
+  State<TransactionHistoryScreen> createState() => TransactionHistoryScreenState();
 }
 
-class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
+class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   List<TransactionModel> _transactions = [];
   bool _isLoading = false;
   int _currentPage = 1;
@@ -26,6 +26,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     super.initState();
     _loadTransactions();
   }
+
+  Future<void> reload() => _loadTransactions(page: 1, refresh: true);
 
   Future<void> _loadTransactions({int page = 1, bool refresh = false}) async {
     setState(() => _isLoading = true);
@@ -39,6 +41,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       );
 
       final newItems = res['items'] as List<TransactionModel>;
+      if (!mounted) return;
       setState(() {
         _currentPage = page;
         _totalTransactions = res['total'] as int;
@@ -172,7 +175,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                     MaterialPageRoute(
                                       builder: (_) => TransactionDetailScreen(transactionId: tx.id),
                                     ),
-                                  );
+                                  ).then((_) {
+                                    if (mounted) reload();
+                                  });
                                 },
                               );
                             },

@@ -28,11 +28,13 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   void _loadDetail() async {
     try {
       final tx = await BankingService.getTransactionDetail(widget.transactionId);
+      if (!mounted) return;
       setState(() {
         _transaction = tx;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;

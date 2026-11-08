@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class StorageService {
   static const String _keyAccessToken = 'access_token';
@@ -6,30 +7,47 @@ class StorageService {
   static const String _keyBaseUrl = 'custom_base_url';
   static const String _keyRememberedIdentifier = 'remembered_identifier';
   static const String _keyHideBalance = 'hide_balance';
+  static const String _keySecureAccessToken = 'access_token';
+  static const String _keySecureRefreshToken = 'refresh_token';
 
   static SharedPreferences? _prefs;
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   static Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
+    await _migrateLegacyTokens();
   }
 
-  static String? getAccessToken() {
-    return _prefs?.getString(_keyAccessToken);
+  static Future<void> _migrateLegacyTokens() async {
+    final legacyAccessToken = _prefs?.getString(_keyAccessToken);
+    final legacyRefreshToken = _prefs?.getString(_keyRefreshToken);
+    if (legacyAccessToken != null) {
+      await _secureStorage.write(key: _keySecureAccessToken, value: legacyAccessToken);
+      await _prefs?.remove(_keyAccessToken);
+    }
+    if (legacyRefreshToken != null) {
+      await _secureStorage.write(key: _keySecureRefreshToken, value: legacyRefreshToken);
+      await _prefs?.remove(_keyRefreshToken);
+    }
   }
+
+  static Future<String?> getAccessToken() =>
+      _secureStorage.read(key: _keySecureAccessToken);
 
   static Future<void> setAccessToken(String token) async {
-    await _prefs?.setString(_keyAccessToken, token);
+    await _secureStorage.write(key: _keySecureAccessToken, value: token);
   }
 
-  static String? getRefreshToken() {
-    return _prefs?.getString(_keyRefreshToken);
-  }
+  static Future<String?> getRefreshToken() =>
+      _secureStorage.read(key: _keySecureRefreshToken);
 
   static Future<void> setRefreshToken(String token) async {
-    await _prefs?.setString(_keyRefreshToken, token);
+    await _secureStorage.write(key: _keySecureRefreshToken, value: token);
   }
 
   static Future<void> clearTokens() async {
+    await _secureStorage.delete(key: _keySecureAccessToken);
+    await _secureStorage.delete(key: _keySecureRefreshToken);
     await _prefs?.remove(_keyAccessToken);
     await _prefs?.remove(_keyRefreshToken);
   }
@@ -40,6 +58,10 @@ class StorageService {
 
   static Future<void> setCustomBaseUrl(String url) async {
     await _prefs?.setString(_keyBaseUrl, url);
+  }
+
+  static Future<void> clearCustomBaseUrl() async {
+    await _prefs?.remove(_keyBaseUrl);
   }
 
   static String? getRememberedIdentifier() {
