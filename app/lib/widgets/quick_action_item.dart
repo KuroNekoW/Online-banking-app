@@ -28,24 +28,26 @@ class QuickActionItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 54,
-              height: 54,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: themeColor.withOpacity(0.1),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 icon,
                 color: themeColor,
-                size: 26,
+                size: 23,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               label,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),

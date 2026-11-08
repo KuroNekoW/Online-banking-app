@@ -7,6 +7,7 @@ import '../../providers/banking_provider.dart';
 import '../../services/transfer_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/otp_input_field.dart';
+import '../../widgets/auth_brand_header.dart';
 import 'transfer_success_screen.dart';
 
 class TransferOtpScreen extends StatefulWidget {
@@ -86,33 +87,12 @@ class _TransferOtpScreenState extends State<TransferOtpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.lock_clock_outlined,
-                    size: 36,
-                    color: AppColors.primary,
-                  ),
-                ),
+              const AuthBrandHeader(
+                title: 'Xác thực giao dịch',
+                subtitle: 'Mã OTP giúp bảo vệ giao dịch của bạn.',
+                icon: Icons.lock_clock_outlined,
               ),
-              const SizedBox(height: 20),
-              const Center(
-                child: Text(
-                  'Xác thực giao dịch',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 15),
               Center(
                 child: Text(
                   'Số tiền: ${Formatters.formatCurrency(t.amount)}\nĐến STK: ${widget.destinationAccountNumber}',
@@ -130,18 +110,20 @@ class _TransferOtpScreenState extends State<TransferOtpScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amber.shade300),
+                  color: const Color(0xFFEAF0F8),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFD8E3F0)),
                 ),
                 child: Row(
                   children: const [
-                    Icon(Icons.mark_email_unread_outlined, color: Colors.amber, size: 20),
+                    Icon(Icons.mark_email_unread_outlined,
+                        color: AppColors.primary, size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Mã OTP đã được gửi về email Mailpit (http://localhost:8025).',
-                        style: TextStyle(fontSize: 12, color: Colors.brown),
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.primaryDark),
                       ),
                     ),
                   ],

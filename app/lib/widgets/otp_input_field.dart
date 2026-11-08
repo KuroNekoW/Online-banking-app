@@ -48,7 +48,10 @@ class _OtpInputFieldState extends State<OtpInputField> {
     if (value.isNotEmpty) {
       // If user pasted a multi-digit string (e.g. 6 digits)
       if (value.length > 1) {
-        final digits = value.split('').where((char) => RegExp(r'[0-9]').hasMatch(char)).toList();
+        final digits = value
+            .split('')
+            .where((char) => RegExp(r'[0-9]').hasMatch(char))
+            .toList();
         for (int i = 0; i < widget.length && i < digits.length; i++) {
           _controllers[i].text = digits[i];
         }
@@ -79,37 +82,42 @@ class _OtpInputFieldState extends State<OtpInputField> {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(widget.length, (index) {
-        return SizedBox(
-          width: 48,
-          height: 56,
-          child: TextFormField(
-            controller: _controllers[index],
-            focusNode: _focusNodes[index],
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
-            onChanged: (value) => _onDigitChanged(index, value),
-            decoration: InputDecoration(
-              counterText: '',
-              contentPadding: EdgeInsets.zero,
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.divider, width: 1.5),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: index == widget.length - 1 ? 0 : 8),
+            child: SizedBox(
+              height: 56,
+              child: TextFormField(
+                controller: _controllers[index],
+                focusNode: _focusNodes[index],
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                onChanged: (value) => _onDigitChanged(index, value),
+                decoration: InputDecoration(
+                  counterText: '',
+                  contentPadding: EdgeInsets.zero,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide:
+                        const BorderSide(color: AppColors.divider, width: 1.2),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide:
+                        const BorderSide(color: AppColors.primary, width: 1.8),
+                  ),
+                ),
               ),
             ),
           ),

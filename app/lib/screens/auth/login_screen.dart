@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/banking_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../widgets/auth_brand_header.dart';
 import '../home/main_navigation_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
@@ -62,7 +63,8 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Đăng nhập không thành công'),
+          content:
+              Text(authProvider.errorMessage ?? 'Đăng nhập không thành công'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -74,7 +76,8 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cài đặt địa chỉ máy chủ API', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text('Cài đặt địa chỉ máy chủ API',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +107,9 @@ class _LoginScreenState extends State<LoginScreen> {
               if (!mounted) return;
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Đã cập nhật máy chủ: ${urlController.text.trim()}')),
+                SnackBar(
+                    content: Text(
+                        'Đã cập nhật máy chủ: ${urlController.text.trim()}')),
               );
               setState(() {});
             },
@@ -121,176 +126,136 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),
-            tooltip: 'Cài đặt kết nối API',
-            onPressed: _showServerConfigDialog,
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton.filledTonal(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: 'Cài đặt kết nối API',
+              onPressed: _showServerConfigDialog,
+            ),
           ),
         ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 16),
-                // Logo & Header
-                Center(
-                  child: Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(22),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.account_balance,
-                      size: 40,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 20),
-                const Center(
-                  child: Text(
-                    'SE113 Mobile Banking',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(23),
+                    border: Border.all(color: const Color(0xFFE9EEF3)),
                   ),
-                ),
-                const SizedBox(height: 6),
-                const Center(
-                  child: Text(
-                    'Đăng nhập tài khoản ngân hàng trực tuyến',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 36),
-
-                // Form Inputs
-                CustomTextField(
-                  controller: _identifierController,
-                  label: 'Tên đăng nhập / Email / SĐT',
-                  hint: 'Nhập email hoặc số điện thoại',
-                  prefixIcon: Icons.person_outline,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (val) {
-                    if (val == null || val.trim().isEmpty) {
-                      return 'Vui lòng nhập tên đăng nhập';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 18),
-
-                CustomTextField(
-                  controller: _passwordController,
-                  label: 'Mật khẩu',
-                  hint: 'Nhập mật khẩu',
-                  prefixIcon: Icons.lock_outline,
-                  isPassword: true,
-                  validator: (val) {
-                    if (val == null || val.isEmpty) {
-                      return 'Vui lòng nhập mật khẩu';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 8),
-
-                // Remember me & Forgot Password
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _rememberMe,
-                          activeColor: AppColors.primary,
-                          onChanged: (val) {
-                            setState(() {
-                              _rememberMe = val ?? true;
-                            });
-                          },
-                        ),
-                        const Text(
-                          'Ghi nhớ tài khoản',
-                          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                        );
-                      },
-                      child: const Text(
-                        'Quên mật khẩu?',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text('Đăng nhập',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary)),
+                      const SizedBox(height: 4),
+                      const Text('Nhập thông tin tài khoản của bạn',
+                          style: TextStyle(
+                              fontSize: 13, color: AppColors.textSecondary)),
+                      const SizedBox(height: 20),
+                      CustomTextField(
+                        controller: _identifierController,
+                        label: 'Tên đăng nhập / Email / SĐT',
+                        hint: 'Nhập email hoặc số điện thoại',
+                        prefixIcon: Icons.person_outline_rounded,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (val) => val == null || val.trim().isEmpty
+                            ? 'Vui lòng nhập tên đăng nhập'
+                            : null,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 17),
+                      CustomTextField(
+                        controller: _passwordController,
+                        label: 'Mật khẩu',
+                        hint: 'Nhập mật khẩu',
+                        prefixIcon: Icons.lock_outline_rounded,
+                        isPassword: true,
+                        validator: (val) => val == null || val.isEmpty
+                            ? 'Vui lòng nhập mật khẩu'
+                            : null,
+                      ),
+                      const SizedBox(height: 7),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _rememberMe,
+                            activeColor: AppColors.primary,
+                            visualDensity: VisualDensity.compact,
+                            onChanged: (val) =>
+                                setState(() => _rememberMe = val ?? true),
+                          ),
+                          const Expanded(
+                              child: Text('Ghi nhớ tài khoản',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary))),
+                          TextButton(
+                            onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const ForgotPasswordScreen())),
+                            child: const Text('Quên mật khẩu?',
+                                style: TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      CustomButton(
+                          text: 'Đăng nhập',
+                          icon: Icons.arrow_forward_rounded,
+                          isLoading: authProvider.isLoading,
+                          onPressed: _handleLogin),
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Chưa có tài khoản? ',
+                              style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13)),
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const RegisterScreen())),
+                            child: const Text('Đăng ký ngay',
+                                style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 20),
-
-                // Login Button
-                CustomButton(
-                  text: 'Đăng nhập',
-                  isLoading: authProvider.isLoading,
-                  onPressed: _handleLogin,
-                ),
-                const SizedBox(height: 24),
-
-                // Register Link
-                Row(
+                const SizedBox(height: 16),
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Chưa có tài khoản? ',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                        );
-                      },
-                      child: const Text(
-                        'Đăng ký ngay',
+                    Icon(Icons.verified_user_outlined,
+                        size: 15, color: AppColors.textMuted),
+                    SizedBox(width: 6),
+                    Text('Kết nối được bảo vệ',
                         style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                            fontSize: 12, color: AppColors.textMuted)),
                   ],
                 ),
-                const SizedBox(height: 24),
               ],
             ),
           ),

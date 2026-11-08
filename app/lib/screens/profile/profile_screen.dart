@@ -17,7 +17,8 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cài đặt máy chủ Backend API', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text('Cài đặt máy chủ Backend API',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,14 +35,17 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
           ElevatedButton(
             onPressed: () async {
               await StorageService.setCustomBaseUrl(urlController.text.trim());
               if (!ctx.mounted) return;
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Đã cập nhật máy chủ: ${urlController.text.trim()}')),
+                SnackBar(
+                    content: Text(
+                        'Đã cập nhật máy chủ: ${urlController.text.trim()}')),
               );
             },
             child: const Text('Lưu'),
@@ -55,10 +59,14 @@ class ProfileScreen extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xác nhận đăng xuất', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng không?'),
+        title: const Text('Xác nhận đăng xuất',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content:
+            const Text('Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng không?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Hủy')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
@@ -114,9 +122,12 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         subtitle: subtitle != null
-            ? Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))
+            ? Text(subtitle,
+                style: const TextStyle(
+                    fontSize: 12, color: AppColors.textSecondary))
             : null,
-        trailing: const Icon(Icons.chevron_right, size: 20, color: AppColors.textMuted),
+        trailing: const Icon(Icons.chevron_right,
+            size: 20, color: AppColors.textMuted),
       ),
     );
   }
@@ -140,42 +151,49 @@ class ProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(23),
+                  border: Border.all(color: const Color(0xFFE9EEF3)),
                 ),
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundColor: AppColors.primary,
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      alignment: Alignment.center,
                       child: Text(
                         user?.fullName.isNotEmpty == true
                             ? user!.fullName.substring(0, 1).toUpperCase()
                             : 'U',
-                        style: const TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 28,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       user?.fullName ?? 'Khách hàng',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       user?.email ?? '',
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.textSecondary),
                     ),
                     if (user?.phone != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         user!.phone!,
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                            fontSize: 13, color: AppColors.textSecondary),
                       ),
                     ],
                     const SizedBox(height: 10),
@@ -194,7 +212,8 @@ class ProfileScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const BeneficiaryListScreen()),
+                    MaterialPageRoute(
+                        builder: (_) => const BeneficiaryListScreen()),
                   );
                 },
               ),
@@ -206,7 +225,8 @@ class ProfileScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+                    MaterialPageRoute(
+                        builder: (_) => const ChangePasswordScreen()),
                   );
                 },
               ),
@@ -227,7 +247,8 @@ class ProfileScreen extends StatelessWidget {
                     context: context,
                     applicationName: 'Mobile Online Banking',
                     applicationVersion: '1.0.0',
-                    applicationLegalese: 'Đồ án môn học SE113 - Trường ĐH CNTT (UIT - ĐHQG-HCM)\nNhóm 5',
+                    applicationLegalese:
+                        'Đồ án môn học SE113 - Trường ĐH CNTT (UIT - ĐHQG-HCM)\nNhóm 5',
                   );
                 },
               ),
