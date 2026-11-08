@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/otp_input_field.dart';
+import '../../widgets/auth_brand_header.dart';
 import 'login_screen.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
@@ -109,12 +110,14 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: const [
               Icon(Icons.check_circle, color: AppColors.success, size: 28),
               SizedBox(width: 10),
-              Text('Kích hoạt thành công', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('Kích hoạt thành công',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           content: const Text(
@@ -159,33 +162,12 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.mark_email_read_outlined,
-                    size: 36,
-                    color: AppColors.primary,
-                  ),
-                ),
+              const AuthBrandHeader(
+                title: 'Xác nhận địa chỉ email',
+                subtitle: 'Nhập mã bảo mật để kích hoạt tài khoản.',
+                icon: Icons.mark_email_read_outlined,
               ),
-              const SizedBox(height: 24),
-              const Center(
-                child: Text(
-                  'Nhập mã xác thực',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 18),
               Center(
                 child: Text(
                   'Hệ thống đã gửi mã OTP 6 chữ số đến địa chỉ:\n${widget.email}',
@@ -204,18 +186,20 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amber.shade300),
+                  color: const Color(0xFFEAF0F8),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFD8E3F0)),
                 ),
                 child: Row(
                   children: const [
-                    Icon(Icons.info_outline, color: Colors.amber, size: 20),
+                    Icon(Icons.info_outline,
+                        color: AppColors.primary, size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Kiểm tra hòm thư Mailpit tại http://localhost:8025 để lấy mã OTP.',
-                        style: TextStyle(fontSize: 12, color: Colors.brown),
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.primaryDark),
                       ),
                     ),
                   ],

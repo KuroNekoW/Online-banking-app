@@ -4,6 +4,7 @@ import '../../services/auth_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/otp_input_field.dart';
+import '../../widgets/auth_brand_header.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -49,7 +50,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Mã xác thực khôi phục mật khẩu đã được gửi đến email!'),
+          content:
+              Text('Mã xác thực khôi phục mật khẩu đã được gửi đến email!'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -96,9 +98,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Thành công', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text('Mật khẩu của bạn đã được đặt lại thành công. Vui lòng đăng nhập lại.'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Thành công',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text(
+              'Mật khẩu của bạn đã được đặt lại thành công. Vui lòng đăng nhập lại.'),
           actions: [
             ElevatedButton(
               onPressed: () {
@@ -132,15 +137,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const AuthBrandHeader(
+                title: 'Khôi phục quyền truy cập',
+                subtitle: 'Xác minh danh tính để tiếp tục sử dụng tài khoản.',
+                icon: Icons.lock_reset_rounded,
+              ),
+              const SizedBox(height: 20),
               if (_currentStep == 1) ...[
                 const Text(
-                  'Quên mật khẩu?',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  'Nhận mã xác minh',
+                  style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 8),
                 const Text(
                   'Nhập địa chỉ email hoặc tên đăng nhập đã đăng ký để nhận mã xác minh khôi phục mật khẩu.',
-                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  style:
+                      TextStyle(fontSize: 14, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 28),
                 CustomTextField(
@@ -158,17 +173,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ] else ...[
                 const Text(
                   'Đặt lại mật khẩu mới',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 8),
                 const Text(
                   'Nhập mã OTP được gửi qua email (Mailpit :8025) và mật khẩu mới của bạn.',
-                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  style:
+                      TextStyle(fontSize: 14, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 20),
                 const Text(
                   'Mã OTP 6 chữ số',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 8),
                 OtpInputField(

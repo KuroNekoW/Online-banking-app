@@ -11,7 +11,8 @@ class TransactionHistoryScreen extends StatefulWidget {
   const TransactionHistoryScreen({super.key});
 
   @override
-  State<TransactionHistoryScreen> createState() => TransactionHistoryScreenState();
+  State<TransactionHistoryScreen> createState() =>
+      TransactionHistoryScreenState();
 }
 
 class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
@@ -54,7 +55,8 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text(e.toString()), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -66,9 +68,13 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     final accountId = context.read<BankingProvider>().selectedAccount?.id;
     if (_filter == 'ALL') return _transactions;
     if (_filter == 'CREDIT') {
-      return _transactions.where((t) => t.getAmountForAccount(accountId) > 0).toList();
+      return _transactions
+          .where((t) => t.getAmountForAccount(accountId) > 0)
+          .toList();
     }
-    return _transactions.where((t) => t.getAmountForAccount(accountId) < 0).toList();
+    return _transactions
+        .where((t) => t.getAmountForAccount(accountId) < 0)
+        .toList();
   }
 
   Widget _buildFilterChip(String label, String value) {
@@ -85,7 +91,8 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: isSelected ? AppColors.primary : AppColors.divider),
+        side: BorderSide(
+            color: isSelected ? AppColors.primary : AppColors.divider),
       ),
       onSelected: (selected) {
         if (selected) {
@@ -110,20 +117,21 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         child: Column(
           children: [
             // Filter Header Chips
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              color: Colors.white,
-              child: Row(
-                children: [
-                  _buildFilterChip('Tất cả', 'ALL'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Tiền vào (+)', 'CREDIT'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Tiền ra (-)', 'DEBIT'),
-                ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 2),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterChip('Tất cả', 'ALL'),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Tiền vào (+)', 'CREDIT'),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Tiền ra (-)', 'DEBIT'),
+                  ],
+                ),
               ),
             ),
-            const Divider(height: 1),
 
             // Transactions List
             Expanded(
@@ -138,29 +146,46 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: const [
-                                  Icon(Icons.receipt_long_outlined, size: 64, color: AppColors.textMuted),
+                                  Icon(Icons.receipt_long_outlined,
+                                      size: 64, color: AppColors.textMuted),
                                   SizedBox(height: 12),
                                   Text(
                                     'Không tìm thấy giao dịch nào',
-                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.textSecondary),
                                   ),
                                 ],
                               ),
                             ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            itemCount: filtered.length + (_transactions.length < _totalTransactions ? 1 : 0),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            itemCount: filtered.length +
+                                (_transactions.length < _totalTransactions
+                                    ? 1
+                                    : 0),
                             itemBuilder: (context, index) {
                               if (index == filtered.length) {
                                 return Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
                                   child: Center(
                                     child: OutlinedButton(
-                                      onPressed: _isLoading ? null : () => _loadTransactions(page: _currentPage + 1),
+                                      onPressed: _isLoading
+                                          ? null
+                                          : () => _loadTransactions(
+                                              page: _currentPage + 1),
                                       child: _isLoading
-                                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                                          : const Text('Tải thêm giao dịch cũ hơn'),
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2))
+                                          : const Text(
+                                              'Tải thêm giao dịch cũ hơn'),
                                     ),
                                   ),
                                 );
@@ -173,7 +198,8 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => TransactionDetailScreen(transactionId: tx.id),
+                                      builder: (_) => TransactionDetailScreen(
+                                          transactionId: tx.id),
                                     ),
                                   ).then((_) {
                                     if (mounted) reload();

@@ -20,7 +20,8 @@ class TransferFormScreen extends StatefulWidget {
   State<TransferFormScreen> createState() => _TransferFormScreenState();
 }
 
-class _TransferFormScreenState extends State<TransferFormScreen> with SingleTickerProviderStateMixin {
+class _TransferFormScreenState extends State<TransferFormScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _destAccountController = TextEditingController();
   final _amountController = TextEditingController();
@@ -58,7 +59,8 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
       });
     });
 
-    final userName = context.read<AuthProvider>().currentUser?.fullName ?? 'KHACH HANG';
+    final userName =
+        context.read<AuthProvider>().currentUser?.fullName ?? 'KHACH HANG';
     _descriptionController.text = '$userName chuyen tien';
 
     if (widget.initialBeneficiary != null) {
@@ -85,7 +87,8 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
     final beneficiaries = context.read<BankingProvider>().beneficiaries;
     if (beneficiaries.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Danh bạ thụ hưởng chưa có người nhận nào')),
+        const SnackBar(
+            content: Text('Danh bạ thụ hưởng chưa có người nhận nào')),
       );
       return;
     }
@@ -116,14 +119,21 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
-                        backgroundColor: AppColors.primaryLight.withOpacity(0.15),
+                        backgroundColor:
+                            AppColors.primaryLight.withOpacity(0.15),
                         child: Text(
-                          item.nickname.isNotEmpty ? item.nickname[0].toUpperCase() : 'B',
-                          style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                          item.nickname.isNotEmpty
+                              ? item.nickname[0].toUpperCase()
+                              : 'B',
+                          style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
-                      title: Text(item.nickname, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text('${item.accountNumber} • ${item.isInternal ? "Nội bộ" : (item.bankCode ?? "Liên ngân hàng")}'),
+                      title: Text(item.nickname,
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(
+                          '${item.accountNumber} • ${item.isInternal ? "Nội bộ" : (item.bankCode ?? "Liên ngân hàng")}'),
                       onTap: () {
                         setState(() {
                           _destAccountController.text = item.accountNumber;
@@ -162,7 +172,9 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
       return;
     }
 
-    final amount = double.tryParse(_amountController.text.replaceAll(',', '').replaceAll('.', '')) ?? 0.0;
+    final amount = double.tryParse(
+            _amountController.text.replaceAll(',', '').replaceAll('.', '')) ??
+        0.0;
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Số tiền chuyển phải lớn hơn 0 ₫')),
@@ -198,7 +210,11 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
             transfer: transfer,
             destinationAccountNumber: _destAccountController.text.trim(),
             destinationBankName: _isInterbank
-                ? (_popularBanks.firstWhere((b) => b['code'] == _selectedBankCode, orElse: () => {'name': _selectedBankCode ?? ''})['name'] ?? '')
+                ? (_popularBanks.firstWhere(
+                        (b) => b['code'] == _selectedBankCode,
+                        orElse: () =>
+                            {'name': _selectedBankCode ?? ''})['name'] ??
+                    '')
                 : 'SE113 Bank (Nội bộ)',
           ),
         ),
@@ -230,12 +246,46 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF0F8),
+                    borderRadius: BorderRadius.circular(19),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.shield_outlined,
+                          color: AppColors.primary, size: 23),
+                      SizedBox(width: 11),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Chuyển tiền an toàn',
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primaryDark)),
+                            SizedBox(height: 3),
+                            Text(
+                                'Kiểm tra kỹ thông tin người nhận trước khi tiếp tục.',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                    height: 1.3)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 15),
                 // Source Account Container
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(19),
                     border: Border.all(color: AppColors.divider),
                   ),
                   child: Column(
@@ -243,7 +293,8 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
                     children: [
                       const Text(
                         'Từ tài khoản nguồn',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 6),
                       Row(
@@ -251,10 +302,12 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
                         children: [
                           Text(
                             sourceAccount?.accountNumber ?? '000000000000',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            Formatters.formatCurrency(sourceAccount?.balance ?? 0.0),
+                            Formatters.formatCurrency(
+                                sourceAccount?.balance ?? 0.0),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -283,7 +336,8 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
                     ),
                     labelColor: Colors.white,
                     unselectedLabelColor: AppColors.textSecondary,
-                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    labelStyle: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 13),
                     tabs: const [
                       Tab(text: 'Nội bộ SE113'),
                       Tab(text: 'Liên ngân hàng 24/7'),
@@ -296,7 +350,10 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
                 if (_isInterbank) ...[
                   const Text(
                     'Ngân hàng thụ hưởng',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 6),
                   Container(
@@ -338,11 +395,15 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
                   suffixIcon: TextButton.icon(
                     onPressed: _showBeneficiaryPicker,
                     icon: const Icon(Icons.contacts, size: 16),
-                    label: const Text('Danh bạ', style: TextStyle(fontSize: 12)),
+                    label:
+                        const Text('Danh bạ', style: TextStyle(fontSize: 12)),
                   ),
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Vui lòng nhập số tài khoản nhận';
-                    if (sourceAccount != null && val.trim() == sourceAccount.accountNumber && !_isInterbank) {
+                    if (val == null || val.trim().isEmpty)
+                      return 'Vui lòng nhập số tài khoản nhận';
+                    if (sourceAccount != null &&
+                        val.trim() == sourceAccount.accountNumber &&
+                        !_isInterbank) {
                       return 'Không thể chuyển đến chính tài khoản nguồn';
                     }
                     return null;
@@ -359,7 +420,8 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Vui lòng nhập số tiền';
+                    if (val == null || val.trim().isEmpty)
+                      return 'Vui lòng nhập số tiền';
                     final numVal = double.tryParse(val) ?? 0;
                     if (numVal <= 0) return 'Số tiền phải lớn hơn 0';
                     return null;
@@ -375,7 +437,8 @@ class _TransferFormScreenState extends State<TransferFormScreen> with SingleTick
                     return ActionChip(
                       label: Text(
                         Formatters.formatCurrency(amt),
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w500),
                       ),
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(

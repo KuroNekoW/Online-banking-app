@@ -37,79 +37,62 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final unreadCount = context.watch<BankingProvider>().unreadNotificationCount;
+    final unreadCount =
+        context.watch<BankingProvider>().unreadNotificationCount;
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, -3),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-            if (index == 2) _historyKey.currentState?.reload();
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textMuted,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 12),
-          elevation: 0,
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Trang chủ',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.swap_horiz_outlined),
-              activeIcon: Icon(Icons.swap_horiz),
-              label: 'Chuyển tiền',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long_outlined),
-              activeIcon: Icon(Icons.receipt_long),
-              label: 'Lịch sử',
-            ),
-            BottomNavigationBarItem(
-              icon: unreadCount > 0
-                  ? Badge.count(
-                      count: unreadCount,
-                      backgroundColor: AppColors.error,
-                      child: const Icon(Icons.notifications_outlined),
-                    )
-                  : const Icon(Icons.notifications_outlined),
-              activeIcon: unreadCount > 0
-                  ? Badge.count(
-                      count: unreadCount,
-                      backgroundColor: AppColors.error,
-                      child: const Icon(Icons.notifications),
-                    )
-                  : const Icon(Icons.notifications),
-              label: 'Thông báo',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Tài khoản',
-            ),
-          ],
-        ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
+      bottomNavigationBar: NavigationBar(
+        height: 70,
+        backgroundColor: Colors.white,
+        indicatorColor: const Color(0xFFE8EEF7),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        selectedIndex: _currentIndex,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        onDestinationSelected: (index) {
+          setState(() => _currentIndex = index);
+          if (index == 2) _historyKey.currentState?.reload();
+        },
+        destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
+            label: 'Trang chủ',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.swap_horiz_outlined),
+            selectedIcon: Icon(Icons.swap_horiz_rounded),
+            label: 'Chuyển tiền',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long_rounded),
+            label: 'Lịch sử',
+          ),
+          NavigationDestination(
+            icon: unreadCount > 0
+                ? Badge.count(
+                    count: unreadCount,
+                    backgroundColor: AppColors.error,
+                    child: const Icon(Icons.notifications_outlined),
+                  )
+                : const Icon(Icons.notifications_outlined),
+            selectedIcon: unreadCount > 0
+                ? Badge.count(
+                    count: unreadCount,
+                    backgroundColor: AppColors.error,
+                    child: const Icon(Icons.notifications_rounded),
+                  )
+                : const Icon(Icons.notifications_rounded),
+            label: 'Thông báo',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Tài khoản',
+          ),
+        ],
       ),
     );
   }

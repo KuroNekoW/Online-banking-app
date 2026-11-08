@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../widgets/auth_brand_header.dart';
 import 'verify_otp_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -82,33 +83,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const AuthBrandHeader(
+                  title: 'Bắt đầu hành trình tài chính số',
+                  subtitle: 'Tạo tài khoản trong vài bước đơn giản và an toàn.',
+                  icon: Icons.person_add_alt_1_rounded,
+                ),
+                const SizedBox(height: 21),
                 const Text(
-                  'Thông tin đăng ký',
+                  'Thông tin của bạn',
                   style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 const Text(
                   'Vui lòng nhập đầy đủ và chính xác thông tin để kích hoạt tài khoản ngân hàng',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  style:
+                      TextStyle(fontSize: 13, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 24),
-
                 CustomTextField(
                   controller: _nameController,
                   label: 'Họ và tên',
                   hint: 'Nguyễn Văn A',
                   prefixIcon: Icons.person_outline,
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Vui lòng nhập họ và tên';
+                    if (val == null || val.trim().isEmpty)
+                      return 'Vui lòng nhập họ và tên';
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-
                 CustomTextField(
                   controller: _emailController,
                   label: 'Địa chỉ Email',
@@ -116,15 +123,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Vui lòng nhập email';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val.trim())) {
+                    if (val == null || val.trim().isEmpty)
+                      return 'Vui lòng nhập email';
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(val.trim())) {
                       return 'Email không đúng định dạng';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-
                 CustomTextField(
                   controller: _phoneController,
                   label: 'Số điện thoại',
@@ -132,13 +140,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Vui lòng nhập số điện thoại';
-                    if (val.trim().length < 9) return 'Số điện thoại không hợp lệ';
+                    if (val == null || val.trim().isEmpty)
+                      return 'Vui lòng nhập số điện thoại';
+                    if (val.trim().length < 9)
+                      return 'Số điện thoại không hợp lệ';
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-
                 CustomTextField(
                   controller: _passwordController,
                   label: 'Mật khẩu',
@@ -146,13 +155,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.lock_outline,
                   isPassword: true,
                   validator: (val) {
-                    if (val == null || val.isEmpty) return 'Vui lòng nhập mật khẩu';
-                    if (val.length < 8) return 'Mật khẩu phải có ít nhất 8 ký tự';
+                    if (val == null || val.isEmpty)
+                      return 'Vui lòng nhập mật khẩu';
+                    if (val.length < 8)
+                      return 'Mật khẩu phải có ít nhất 8 ký tự';
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-
                 CustomTextField(
                   controller: _confirmPasswordController,
                   label: 'Xác nhận mật khẩu',
@@ -160,12 +170,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.lock_reset_outlined,
                   isPassword: true,
                   validator: (val) {
-                    if (val != _passwordController.text) return 'Mật khẩu xác nhận không khớp';
+                    if (val != _passwordController.text)
+                      return 'Mật khẩu xác nhận không khớp';
                     return null;
                   },
                 ),
                 const SizedBox(height: 30),
-
                 CustomButton(
                   text: 'Tiếp tục nhận mã OTP',
                   isLoading: authProvider.isLoading,
