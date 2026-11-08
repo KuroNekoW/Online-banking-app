@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_user
 from app.db.models import Account, Beneficiary, Notification, Transaction, TransactionEntry, TransactionStatus, User
@@ -119,15 +119,37 @@ def list_transactions(account_id: UUID | None = None, page: int = Query(default=
     accounts = db.query(Account.id).filter(Account.owner_id == current_user.id)
     if account_id is not None:
         own_account(db, current_user, account_id); accounts = accounts.filter(Account.id == account_id)
-    query = db.query(Transaction).join(TransactionEntry).filter(TransactionEntry.account_id.in_(accounts)).distinct()
+    query = (
+        db.query(Transaction)
+        .options(selectinload(Transaction.entries))
+        .join(TransactionEntry)
+        .filter(TransactionEntry.account_id.in_(accounts))
+        .distinct()
+    )
     total = query.count()
     items = query.order_by(Transaction.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
-    return {"page": page, "page_size": page_size, "total": total, "items": items}
+    return {"page": page, "page_size": page_size, "total": total, "items": [serialize_transaction(item) for item in items]}
+
+
+def serialize_transaction(transaction: Transaction) -> dict:
+    return {
+        "id": transaction.id,
+        "reference": transaction.reference,
+        "status": transaction.status.value,
+        "description": transaction.description,
+        "transfer_id": transaction.transfer_id,
+        "created_at": transaction.created_at,
+        "posted_at": transaction.posted_at,
+        "entries": [
+            {"id": entry.id, "account_id": entry.account_id, "amount": entry.amount}
+            for entry in transaction.entries
+        ],
+    }
 
 
 @router.get("/transactions/{transaction_id}", response_model=None)
-def transaction_detail(transaction_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Transaction:
-    transaction = db.get(Transaction, transaction_id)
+def transaction_detail(transaction_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    transaction = db.query(Transaction).options(selectinload(Transaction.entries)).filter(Transaction.id == transaction_id).first()
     if transaction is None or not any(entry.account_id in {a.id for a in current_user.accounts} for entry in transaction.entries):
         raise HTTPException(status_code=404, detail="Transaction not found")
-    return transaction
+    return serialize_transaction(transaction)
