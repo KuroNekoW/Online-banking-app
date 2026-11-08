@@ -42,6 +42,23 @@ The API container automatically runs `alembic upgrade head` and then the idempot
 
 The default development Admin is configured by `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`. Never deploy with the sample `.env` values.
 
+### Demo customers and opening balances
+
+The local Compose stack seeds two funded customers by default (`SEED_DEMO_DATA=true`). The seed
+is idempotent: it uses stable emails, account numbers, and opening transaction references, so API
+restarts do not add the opening funds again.
+
+| Login email | Password | Account number | Opening balance |
+| --- | --- | --- | ---: |
+| `alice.demo@banking.local` | `DemoCustomer123!` | `100000000001` | 1,000,000 VND |
+| `bob.demo@banking.local` | `DemoCustomer123!` | `100000000002` | 500,000 VND |
+
+Both demo accounts can transfer to one another. The seed creates a reserved demo ledger account
+as the balancing counterparty; opening balances are posted through balanced ledger transactions,
+not written directly to an account balance. To disable demo data, set `SEED_DEMO_DATA=false` in
+`.env` and recreate the API container. Disabling the flag does not delete previously seeded data.
+These credentials and balances are for local development only.
+
 ## Run the Flutter frontend
 
 Start the backend stack first with `docker compose up --build -d`, then verify that `http://127.0.0.1:8000/health` returns `{"status":"ok"}`. In PowerShell, move into `app/`, install dependencies, and run the client on Chrome:
@@ -120,7 +137,7 @@ Run from the repository root:
 
 ```powershell
 docker compose --profile test up -d postgres-test
-docker compose run --rm -e PYTHONPATH=/code -e TEST_DATABASE_URL=postgresql+psycopg://banking_test:banking_test_password@postgres-test:5432/banking_test api pytest -q
+docker compose run --rm -e PYTHONPATH=/code -e SEED_DEMO_DATA=false -e TEST_DATABASE_URL=postgresql+psycopg://banking_test:banking_test_password@postgres-test:5432/banking_test api pytest -q
 docker compose --profile test rm -s -f postgres-test
 ```
 

@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     app_env: str = "development"
     seed_admin_email: str = "admin@banking.local"
     seed_admin_password: str = "ChangeThisAdminPassword123!"
+    seed_demo_data: bool = False
+    seed_demo_password: str = "DemoCustomer123!"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
