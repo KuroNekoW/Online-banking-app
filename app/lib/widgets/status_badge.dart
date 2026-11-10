@@ -16,7 +16,7 @@ class StatusBadge extends StatelessWidget {
       case 'active':
       case 'completed':
       case 'posted':
-        bg = AppColors.success.withOpacity(0.12);
+        bg = AppColors.success.withValues(alpha: 0.12);
         fg = AppColors.success;
         label = status == 'active' ? 'Hoạt động' : 'Thành công';
         break;
@@ -25,18 +25,20 @@ class StatusBadge extends StatelessWidget {
       case 'pending_authentication':
       case 'processing':
       case 'pending_external':
-        bg = AppColors.warning.withOpacity(0.15);
+        bg = AppColors.warning.withValues(alpha: 0.15);
         fg = AppColors.warning;
         label = status == 'pending_authentication'
             ? 'Chờ OTP'
-            : (status == 'pending_external' ? 'Chờ liên ngân hàng' : 'Đang xử lý');
+            : (status == 'pending_external'
+                ? 'Chờ liên ngân hàng'
+                : 'Đang xử lý');
         break;
       case 'failed':
       case 'rejected':
       case 'expired':
       case 'locked':
       case 'disabled':
-        bg = AppColors.error.withOpacity(0.12);
+        bg = AppColors.error.withValues(alpha: 0.12);
         fg = AppColors.error;
         label = status == 'locked' ? 'Bị khóa' : 'Thất bại';
         break;

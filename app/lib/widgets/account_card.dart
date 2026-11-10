@@ -53,7 +53,7 @@ class AccountCard extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(.13),
+                          color: Colors.white.withValues(alpha: .13),
                           borderRadius: BorderRadius.circular(11)),
                       child: const Icon(Icons.account_balance_rounded,
                           color: Colors.white, size: 18),
@@ -184,7 +184,7 @@ class AccountCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 9, vertical: 5),
                       decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(.13),
+                          color: Colors.white.withValues(alpha: .13),
                           borderRadius: BorderRadius.circular(9)),
                       child: const Text('NAPAS 247',
                           style: TextStyle(
@@ -225,7 +225,7 @@ class _GlowCircle extends StatelessWidget {
           decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: Colors.white.withOpacity(opacity), width: 22)),
+                  color: Colors.white.withValues(alpha: opacity), width: 22)),
         ),
       );
 }

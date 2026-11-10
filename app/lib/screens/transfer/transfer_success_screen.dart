@@ -31,13 +31,15 @@ class _TransferSuccessScreenState extends State<TransferSuccessScreen> {
   bool _isSavingBeneficiary = false;
 
   void _saveBeneficiary() async {
-    final nicknameController = TextEditingController(text: widget.destinationAccountNumber);
+    final nicknameController =
+        TextEditingController(text: widget.destinationAccountNumber);
     final nameController = TextEditingController(text: 'Người nhận');
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Lưu vào danh bạ thụ hưởng', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        title: const Text('Lưu vào danh bạ thụ hưởng',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -72,13 +74,16 @@ class _TransferSuccessScreenState extends State<TransferSuccessScreen> {
                   await context.read<BankingProvider>().loadBeneficiaries();
                   setState(() => _isSavedBeneficiary = true);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã lưu vào danh bạ người thụ hưởng')),
+                    const SnackBar(
+                        content: Text('Đã lưu vào danh bạ người thụ hưởng')),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                    SnackBar(
+                        content: Text(e.toString()),
+                        backgroundColor: AppColors.error),
                   );
                 }
               } finally {
@@ -98,16 +103,22 @@ class _TransferSuccessScreenState extends State<TransferSuccessScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 13, color: AppColors.textSecondary)),
           Row(
             children: [
               Text(
                 value,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary),
               ),
               if (isCopyable) ...[
                 const SizedBox(width: 4),
-                const Icon(Icons.copy, size: 14, color: AppColors.textSecondary),
+                const Icon(Icons.copy,
+                    size: 14, color: AppColors.textSecondary),
               ],
             ],
           ),
@@ -148,21 +159,27 @@ class _TransferSuccessScreenState extends State<TransferSuccessScreen> {
                     height: 76,
                     decoration: BoxDecoration(
                       color: isPendingExternal
-                          ? AppColors.warning.withOpacity(0.12)
-                          : AppColors.success.withOpacity(0.12),
+                          ? AppColors.warning.withValues(alpha: 0.12)
+                          : AppColors.success.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      isPendingExternal ? Icons.hourglass_top : Icons.check_circle,
+                      isPendingExternal
+                          ? Icons.hourglass_top
+                          : Icons.check_circle,
                       size: 48,
-                      color: isPendingExternal ? AppColors.warning : AppColors.success,
+                      color: isPendingExternal
+                          ? AppColors.warning
+                          : AppColors.success,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Center(
                   child: Text(
-                    isPendingExternal ? 'Giao dịch đang xử lý liên ngân hàng' : 'Chuyển tiền thành công!',
+                    isPendingExternal
+                        ? 'Giao dịch đang xử lý liên ngân hàng'
+                        : 'Chuyển tiền thành công!',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -191,7 +208,7 @@ class _TransferSuccessScreenState extends State<TransferSuccessScreen> {
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -202,15 +219,23 @@ class _TransferSuccessScreenState extends State<TransferSuccessScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Trạng thái', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                          const Text('Trạng thái',
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textSecondary)),
                           StatusBadge(status: t.status),
                         ],
                       ),
                       const Divider(height: 20),
                       _buildRow('Mã giao dịch', t.reference, isCopyable: true),
-                      _buildRow('Thời gian', Formatters.formatDateTime(t.completedAt ?? t.createdAt)),
-                      _buildRow('Tài khoản thụ hưởng', widget.destinationAccountNumber),
-                      _buildRow('Ngân hàng thụ hưởng', widget.destinationBankName),
+                      _buildRow(
+                          'Thời gian',
+                          Formatters.formatDateTime(
+                              t.completedAt ?? t.createdAt)),
+                      _buildRow('Tài khoản thụ hưởng',
+                          widget.destinationAccountNumber),
+                      _buildRow(
+                          'Ngân hàng thụ hưởng', widget.destinationBankName),
                       _buildRow('Phí giao dịch', '0 ₫'),
                       const Divider(height: 20),
                       _buildRow('Nội dung', t.description ?? 'Chuyen tien'),
@@ -237,7 +262,8 @@ class _TransferSuccessScreenState extends State<TransferSuccessScreen> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const TransferFormScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const TransferFormScreen()),
                     );
                   },
                 ),
@@ -248,7 +274,8 @@ class _TransferSuccessScreenState extends State<TransferSuccessScreen> {
                   isOutlined: true,
                   onPressed: () {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const MainNavigationScreen()),
                       (route) => false,
                     );
                   },

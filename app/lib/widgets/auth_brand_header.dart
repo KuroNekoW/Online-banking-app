@@ -41,7 +41,7 @@ class AuthBrandHeader extends StatelessWidget {
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.14),
+                        color: Colors.white.withValues(alpha: .14),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(icon, color: Colors.white, size: 20),
@@ -90,7 +90,7 @@ class AuthBrandHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: Colors.white.withOpacity(.07), width: 25),
+                      color: Colors.white.withValues(alpha: .07), width: 25),
                 ),
               ),
             ),

@@ -26,7 +26,7 @@ class TransactionTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.divider.withOpacity(0.6)),
+        border: Border.all(color: AppColors.divider.withValues(alpha: 0.6)),
       ),
       child: ListTile(
         onTap: onTap,
@@ -36,8 +36,8 @@ class TransactionTile extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             color: isCredit
-                ? AppColors.success.withOpacity(0.12)
-                : AppColors.error.withOpacity(0.12),
+                ? AppColors.success.withValues(alpha: 0.12)
+                : AppColors.error.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: Icon(

@@ -27,7 +27,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
     try {
-      final res = await BankingService.getNotifications(unreadOnly: _unreadOnly, limit: 50);
+      final res = await BankingService.getNotifications(
+          unreadOnly: _unreadOnly, limit: 50);
       setState(() {
         _notifications = res['items'] as List<NotificationModel>;
       });
@@ -37,7 +38,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text(e.toString()), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -108,18 +110,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.notifications_off_outlined, size: 64, color: AppColors.textMuted),
+                            Icon(Icons.notifications_off_outlined,
+                                size: 64, color: AppColors.textMuted),
                             SizedBox(height: 12),
                             Text(
                               'Không có thông báo nào',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textSecondary),
                             ),
                           ],
                         ),
                       ),
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       itemCount: _notifications.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
@@ -128,20 +135,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
                         return Container(
                           decoration: BoxDecoration(
-                            color: isUnread ? Colors.blue.shade50.withOpacity(0.4) : Colors.white,
+                            color: isUnread
+                                ? Colors.blue.shade50.withValues(alpha: 0.4)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: isUnread ? AppColors.primaryLight.withOpacity(0.3) : AppColors.divider,
+                              color: isUnread
+                                  ? AppColors.primaryLight
+                                      .withValues(alpha: 0.3)
+                                  : AppColors.divider,
                             ),
                           ),
                           child: ListTile(
                             onTap: () => _markAsRead(notif),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             leading: Container(
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                color: _getIconColor(notif.type).withOpacity(0.12),
+                                color: _getIconColor(notif.type)
+                                    .withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -156,7 +170,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   child: Text(
                                     notif.title,
                                     style: TextStyle(
-                                      fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
+                                      fontWeight: isUnread
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
                                       fontSize: 14,
                                       color: AppColors.textPrimary,
                                     ),
@@ -180,12 +196,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 children: [
                                   Text(
                                     notif.body,
-                                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.textSecondary),
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
                                     Formatters.formatDateTime(notif.createdAt),
-                                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                                    style: const TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.textMuted),
                                   ),
                                 ],
                               ),

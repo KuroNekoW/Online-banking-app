@@ -31,7 +31,7 @@ class QuickActionItem extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: themeColor.withOpacity(0.1),
+                color: themeColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(

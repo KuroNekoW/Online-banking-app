@@ -120,7 +120,7 @@ class _TransferFormScreenState extends State<TransferFormScreen>
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
                         backgroundColor:
-                            AppColors.primaryLight.withOpacity(0.15),
+                            AppColors.primaryLight.withValues(alpha: 0.15),
                         child: Text(
                           item.nickname.isNotEmpty
                               ? item.nickname[0].toUpperCase()
@@ -399,8 +399,9 @@ class _TransferFormScreenState extends State<TransferFormScreen>
                         const Text('Danh bạ', style: TextStyle(fontSize: 12)),
                   ),
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty)
+                    if (val == null || val.trim().isEmpty) {
                       return 'Vui lòng nhập số tài khoản nhận';
+                    }
                     if (sourceAccount != null &&
                         val.trim() == sourceAccount.accountNumber &&
                         !_isInterbank) {
@@ -420,8 +421,9 @@ class _TransferFormScreenState extends State<TransferFormScreen>
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty)
+                    if (val == null || val.trim().isEmpty) {
                       return 'Vui lòng nhập số tiền';
+                    }
                     final numVal = double.tryParse(val) ?? 0;
                     if (numVal <= 0) return 'Số tiền phải lớn hơn 0';
                     return null;

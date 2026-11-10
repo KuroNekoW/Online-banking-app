@@ -11,7 +11,8 @@ class TransactionDetailScreen extends StatefulWidget {
   const TransactionDetailScreen({super.key, required this.transactionId});
 
   @override
-  State<TransactionDetailScreen> createState() => _TransactionDetailScreenState();
+  State<TransactionDetailScreen> createState() =>
+      _TransactionDetailScreenState();
 }
 
 class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
@@ -27,7 +28,8 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
 
   void _loadDetail() async {
     try {
-      final tx = await BankingService.getTransactionDetail(widget.transactionId);
+      final tx =
+          await BankingService.getTransactionDetail(widget.transactionId);
       if (!mounted) return;
       setState(() {
         _transaction = tx;
@@ -48,12 +50,17 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 13, color: AppColors.textSecondary)),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary),
             ),
           ),
         ],
@@ -83,7 +90,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                           borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
+                              color: Colors.black.withValues(alpha: 0.04),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -94,16 +101,28 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('Trạng thái sổ cái', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                                const Text('Trạng thái sổ cái',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.textSecondary)),
                                 StatusBadge(status: _transaction!.status),
                               ],
                             ),
                             const Divider(height: 24),
                             _buildRow('Mã tham chiếu', _transaction!.reference),
-                            _buildRow('Thời gian tạo', Formatters.formatDateTime(_transaction!.createdAt)),
+                            _buildRow(
+                                'Thời gian tạo',
+                                Formatters.formatDateTime(
+                                    _transaction!.createdAt)),
                             if (_transaction!.postedAt != null)
-                              _buildRow('Thời gian đăng sổ (Posted)', Formatters.formatDateTime(_transaction!.postedAt)),
-                            _buildRow('Nội dung', _transaction!.description ?? 'Giao dịch chuyển khoản'),
+                              _buildRow(
+                                  'Thời gian đăng sổ (Posted)',
+                                  Formatters.formatDateTime(
+                                      _transaction!.postedAt)),
+                            _buildRow(
+                                'Nội dung',
+                                _transaction!.description ??
+                                    'Giao dịch chuyển khoản'),
                           ],
                         ),
                       ),
@@ -112,7 +131,10 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                       // Double-entry Ledger entries
                       const Text(
                         'Bút toán sổ cái (Double-Entry Ledger)',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary),
                       ),
                       const SizedBox(height: 8),
                       Container(
@@ -128,32 +150,44 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
                                       Icon(
-                                        isCredit ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                                        isCredit
+                                            ? Icons.add_circle_outline
+                                            : Icons.remove_circle_outline,
                                         size: 18,
-                                        color: isCredit ? AppColors.success : AppColors.error,
+                                        color: isCredit
+                                            ? AppColors.success
+                                            : AppColors.error,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        isCredit ? 'Ghi có (Credit)' : 'Ghi nợ (Debit)',
+                                        isCredit
+                                            ? 'Ghi có (Credit)'
+                                            : 'Ghi nợ (Debit)',
                                         style: TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
-                                          color: isCredit ? AppColors.success : AppColors.error,
+                                          color: isCredit
+                                              ? AppColors.success
+                                              : AppColors.error,
                                         ),
                                       ),
                                     ],
                                   ),
                                   Text(
-                                    Formatters.formatCurrency(entry.amount.abs()),
+                                    Formatters.formatCurrency(
+                                        entry.amount.abs()),
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: isCredit ? AppColors.success : AppColors.error,
+                                      color: isCredit
+                                          ? AppColors.success
+                                          : AppColors.error,
                                     ),
                                   ),
                                 ],

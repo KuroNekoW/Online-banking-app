@@ -110,8 +110,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   hint: 'Nguyễn Văn A',
                   prefixIcon: Icons.person_outline,
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty)
+                    if (val == null || val.trim().isEmpty) {
                       return 'Vui lòng nhập họ và tên';
+                    }
                     return null;
                   },
                 ),
@@ -123,8 +124,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty)
+                    if (val == null || val.trim().isEmpty) {
                       return 'Vui lòng nhập email';
+                    }
                     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
                         .hasMatch(val.trim())) {
                       return 'Email không đúng định dạng';
@@ -140,10 +142,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty)
+                    if (val == null || val.trim().isEmpty) {
                       return 'Vui lòng nhập số điện thoại';
-                    if (val.trim().length < 9)
+                    }
+                    if (val.trim().length < 9) {
                       return 'Số điện thoại không hợp lệ';
+                    }
                     return null;
                   },
                 ),
@@ -155,10 +159,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.lock_outline,
                   isPassword: true,
                   validator: (val) {
-                    if (val == null || val.isEmpty)
+                    if (val == null || val.isEmpty) {
                       return 'Vui lòng nhập mật khẩu';
-                    if (val.length < 8)
+                    }
+                    if (val.length < 8) {
                       return 'Mật khẩu phải có ít nhất 8 ký tự';
+                    }
                     return null;
                   },
                 ),
@@ -170,8 +176,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.lock_reset_outlined,
                   isPassword: true,
                   validator: (val) {
-                    if (val != _passwordController.text)
+                    if (val != _passwordController.text) {
                       return 'Mật khẩu xác nhận không khớp';
+                    }
                     return null;
                   },
                 ),

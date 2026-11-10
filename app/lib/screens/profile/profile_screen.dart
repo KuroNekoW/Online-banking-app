@@ -100,7 +100,7 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.divider.withOpacity(0.8)),
+        border: Border.all(color: AppColors.divider.withValues(alpha: 0.8)),
       ),
       child: ListTile(
         onTap: onTap,
@@ -108,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: (iconColor ?? AppColors.primary).withOpacity(0.1),
+            color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: iconColor ?? AppColors.primary, size: 20),

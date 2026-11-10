@@ -46,7 +46,8 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message'] ?? 'Giao dịch đã được xác nhận')),
+          SnackBar(
+              content: Text(res['message'] ?? 'Giao dịch đã được xác nhận')),
         );
       }
     } catch (e) {
@@ -59,7 +60,8 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
     }
   }
 
-  Widget _buildRow(String label, String value, {bool isHighlight = false, Color? valueColor}) {
+  Widget _buildRow(String label, String value,
+      {bool isHighlight = false, Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -68,7 +70,8 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            style:
+                const TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -78,7 +81,8 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
               style: TextStyle(
                 fontSize: isHighlight ? 17 : 14,
                 fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
-                color: valueColor ?? (isHighlight ? AppColors.primary : AppColors.textPrimary),
+                color: valueColor ??
+                    (isHighlight ? AppColors.primary : AppColors.textPrimary),
               ),
             ),
           ),
@@ -109,7 +113,7 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -119,7 +123,8 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
                   children: [
                     const Text(
                       'Số tiền chuyển',
-                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      style: TextStyle(
+                          fontSize: 13, color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -132,10 +137,14 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
                     ),
                     const SizedBox(height: 16),
                     const Divider(),
-                    _buildRow('Tài khoản thụ hưởng', widget.destinationAccountNumber),
+                    _buildRow(
+                        'Tài khoản thụ hưởng', widget.destinationAccountNumber),
                     _buildRow('Ngân hàng nhận', widget.destinationBankName),
-                    _buildRow('Phí giao dịch', '0 ₫ (Miễn phí)', valueColor: AppColors.success),
-                    _buildRow('Tổng tiền thanh toán', Formatters.formatCurrency(t.amount + t.fee), isHighlight: true),
+                    _buildRow('Phí giao dịch', '0 ₫ (Miễn phí)',
+                        valueColor: AppColors.success),
+                    _buildRow('Tổng tiền thanh toán',
+                        Formatters.formatCurrency(t.amount + t.fee),
+                        isHighlight: true),
                     const Divider(),
                     _buildRow('Lời nhắn', t.description ?? 'Chuyen tien'),
                     _buildRow('Mã tham chiếu', t.reference),
@@ -155,12 +164,16 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
                 ),
                 child: Row(
                   children: const [
-                    Icon(Icons.shield_outlined, color: AppColors.primary, size: 22),
+                    Icon(Icons.shield_outlined,
+                        color: AppColors.primary, size: 22),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Giao dịch được bảo mật bởi xác thực OTP 6 chữ số theo tiêu chuẩn an toàn ngân hàng.',
-                        style: TextStyle(fontSize: 12, color: AppColors.textPrimary, height: 1.3),
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textPrimary,
+                            height: 1.3),
                       ),
                     ),
                   ],

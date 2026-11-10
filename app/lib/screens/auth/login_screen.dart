@@ -7,7 +7,6 @@ import '../../providers/auth_provider.dart';
 import '../../providers/banking_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
-import '../../widgets/auth_brand_header.dart';
 import '../home/main_navigation_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
