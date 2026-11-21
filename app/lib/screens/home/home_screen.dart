@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/formatters.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/banking_provider.dart';
 import '../../widgets/account_card.dart';
@@ -217,7 +220,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _DashboardHeader extends StatelessWidget {
+class _DashboardHeader extends StatefulWidget {
   final String firstName;
   final String fullName;
   final int unreadCount;
@@ -231,9 +234,46 @@ class _DashboardHeader extends StatelessWidget {
   });
 
   @override
+  State<_DashboardHeader> createState() => _DashboardHeaderState();
+}
+
+class _DashboardHeaderState extends State<_DashboardHeader> {
+  late DateTime _now;
+  Timer? _clockTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    super.dispose();
+  }
+
+  String _weekday(DateTime date) {
+    const weekdays = [
+      'Thứ Hai',
+      'Thứ Ba',
+      'Thứ Tư',
+      'Thứ Năm',
+      'Thứ Sáu',
+      'Thứ Bảy',
+      'Chủ Nhật',
+    ];
+    return weekdays[date.weekday - 1];
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final initial =
-        fullName.trim().isNotEmpty ? fullName.trim()[0].toUpperCase() : 'U';
+    final initial = widget.fullName.trim().isNotEmpty
+        ? widget.fullName.trim()[0].toUpperCase()
+        : 'U';
     return Row(
       children: [
         Container(
@@ -260,13 +300,38 @@ class _DashboardHeader extends StatelessWidget {
                   style:
                       TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               const SizedBox(height: 2),
-              Text(firstName,
+              Text(widget.firstName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 19,
                       fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 11),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFEAEFF4)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.calendar_today_rounded,
+                  size: 14, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                '${_weekday(_now)}, ${Formatters.formatDate(_now)}  ${Formatters.formatTime(_now)}',
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
@@ -277,14 +342,14 @@ class _DashboardHeader extends StatelessWidget {
               side: const BorderSide(color: Color(0xFFEAEFF4))),
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
-            onTap: onNotifications,
+            onTap: widget.onNotifications,
             child: SizedBox(
               width: 46,
               height: 46,
               child: Center(
-                child: unreadCount > 0
+                child: widget.unreadCount > 0
                     ? Badge.count(
-                        count: unreadCount,
+                        count: widget.unreadCount,
                         backgroundColor: const Color(0xFFE76E63),
                         child: const Icon(Icons.notifications_none_rounded,
                             color: AppColors.textPrimary))

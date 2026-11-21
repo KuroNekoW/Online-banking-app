@@ -98,6 +98,8 @@ class BankingService {
   /// Get transaction history with pagination
   static Future<Map<String, dynamic>> getTransactions({
     String? accountId,
+    DateTime? startDate,
+    DateTime? endDate,
     int page = 1,
     int pageSize = 20,
   }) async {
@@ -107,6 +109,12 @@ class BankingService {
     };
     if (accountId != null && accountId.isNotEmpty) {
       queryParams['account_id'] = accountId;
+    }
+    if (startDate != null) {
+      queryParams['start_date'] = _dateParameter(startDate);
+    }
+    if (endDate != null) {
+      queryParams['end_date'] = _dateParameter(endDate);
     }
 
     final response = await ApiClient.get(
@@ -127,6 +135,11 @@ class BankingService {
       'items': items,
     };
   }
+
+  static String _dateParameter(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 
   /// Get single transaction detail
   static Future<TransactionModel> getTransactionDetail(String transactionId) async {

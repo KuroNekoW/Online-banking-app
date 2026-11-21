@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/calendar_date_validator.dart';
+import '../../core/utils/formatters.dart';
 import '../../models/transaction_model.dart';
 import '../../providers/banking_provider.dart';
 import '../../services/banking_service.dart';
@@ -21,6 +23,8 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   int _currentPage = 1;
   int _totalTransactions = 0;
   String _filter = 'ALL'; // 'ALL', 'CREDIT', 'DEBIT'
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   @override
   void initState() {
@@ -37,6 +41,8 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     try {
       final res = await BankingService.getTransactions(
         accountId: accountId,
+        startDate: _startDate,
+        endDate: _endDate,
         page: page,
         pageSize: 20,
       );
@@ -62,6 +68,63 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _selectDate({required bool isStart}) async {
+    final current = isStart ? _startDate : _endDate;
+    final selected = await showDatePicker(
+      context: context,
+      initialDate:
+          current ?? (isStart ? _endDate : _startDate) ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+      helpText: isStart ? 'Chọn ngày bắt đầu' : 'Chọn ngày kết thúc',
+      cancelText: 'HỦY',
+      confirmText: 'CHỌN',
+    );
+    if (selected == null || !mounted) return;
+    setState(() {
+      if (isStart) {
+        _startDate = selected;
+      } else {
+        _endDate = selected;
+      }
+    });
+  }
+
+  Future<void> _applyDateRange() async {
+    final startDateIsValid = _startDate == null ||
+        checkDate(_startDate!.day, _startDate!.month, _startDate!.year);
+    final endDateIsValid = _endDate == null ||
+        checkDate(_endDate!.day, _endDate!.month, _endDate!.year);
+    if (!startDateIsValid || !endDateIsValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ngày lọc không hợp lệ')),
+      );
+      return;
+    }
+    if (_startDate != null &&
+        _endDate != null &&
+        _startDate!.isAfter(_endDate!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Ngày bắt đầu không được sau ngày kết thúc')),
+      );
+      return;
+    }
+    await _loadTransactions(page: 1, refresh: true);
+  }
+
+  Widget _dateButton(String label, DateTime? value, VoidCallback onPressed) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.calendar_month_outlined, size: 18),
+      label: Text(value == null ? label : Formatters.formatDate(value)),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        visualDensity: VisualDensity.compact,
+      ),
+    );
   }
 
   List<TransactionModel> _getFilteredTransactions() {
@@ -116,6 +179,49 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Lọc theo ngày giao dịch',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    Expanded(
+                        child: _dateButton('Từ ngày', _startDate,
+                            () => _selectDate(isStart: true))),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: _dateButton('Đến ngày', _endDate,
+                            () => _selectDate(isStart: false))),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      tooltip: 'Xóa ngày lọc',
+                      onPressed: _startDate == null && _endDate == null
+                          ? null
+                          : () {
+                              setState(() {
+                                _startDate = null;
+                                _endDate = null;
+                              });
+                              _loadTransactions(page: 1, refresh: true);
+                            },
+                      icon: const Icon(Icons.close),
+                    ),
+                  ]),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: _isLoading ? null : _applyDateRange,
+                      icon: const Icon(Icons.search, size: 18),
+                      label: const Text('Áp dụng khoảng ngày'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             // Filter Header Chips
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 2),

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
 
@@ -103,7 +103,26 @@ def list_notifications(unread_only: bool = False, limit: int = Query(default=50,
     query = db.query(Notification).filter(Notification.user_id == current_user.id)
     if unread_only:
         query = query.filter(Notification.read_at.is_(None))
-    return {"unread_count": db.query(Notification).filter(Notification.user_id == current_user.id, Notification.read_at.is_(None)).count(), "items": query.order_by(Notification.created_at.desc()).limit(limit).all()}
+    items = query.order_by(Notification.created_at.desc()).limit(limit).all()
+    unread_count = db.query(Notification).filter(
+        Notification.user_id == current_user.id,
+        Notification.read_at.is_(None),
+    ).count()
+    return {
+        "unread_count": unread_count,
+        "items": [
+            {
+                "id": item.id,
+                "type": item.type.value,
+                "title": item.title,
+                "body": item.body,
+                "read_at": item.read_at,
+                "created_at": item.created_at,
+                "transfer_id": item.transfer_id,
+            }
+            for item in items
+        ],
+    }
 
 
 @router.post("/notifications/{notification_id}/read", status_code=status.HTTP_204_NO_CONTENT)
@@ -115,7 +134,9 @@ def mark_notification_read(notification_id: UUID, current_user: User = Depends(g
 
 
 @router.get("/transactions")
-def list_transactions(account_id: UUID | None = None, page: int = Query(default=1, ge=1), page_size: int = Query(default=20, ge=1, le=100), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+def list_transactions(account_id: UUID | None = None, start_date: date | None = None, end_date: date | None = None, page: int = Query(default=1, ge=1), page_size: int = Query(default=20, ge=1, le=100), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(status_code=400, detail="Start date must not be after end date")
     accounts = db.query(Account.id).filter(Account.owner_id == current_user.id)
     if account_id is not None:
         own_account(db, current_user, account_id); accounts = accounts.filter(Account.id == account_id)
@@ -126,6 +147,12 @@ def list_transactions(account_id: UUID | None = None, page: int = Query(default=
         .filter(TransactionEntry.account_id.in_(accounts))
         .distinct()
     )
+    # The app displays local Vietnam time; treat selected dates as Vietnam calendar days.
+    vietnam_tz = timezone(timedelta(hours=7))
+    if start_date:
+        query = query.filter(Transaction.created_at >= datetime.combine(start_date, time.min, vietnam_tz))
+    if end_date:
+        query = query.filter(Transaction.created_at < datetime.combine(end_date + timedelta(days=1), time.min, vietnam_tz))
     total = query.count()
     items = query.order_by(Transaction.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
     return {"page": page, "page_size": page_size, "total": total, "items": [serialize_transaction(item) for item in items]}
