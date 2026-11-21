@@ -133,13 +133,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         final notif = _notifications[index];
                         final isUnread = !notif.isRead;
 
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: isUnread
-                                ? Colors.blue.shade50.withValues(alpha: 0.4)
-                                : Colors.white,
+                        return Material(
+                          color: isUnread
+                              ? Colors.blue.shade50.withValues(alpha: 0.4)
+                              : Colors.white,
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
+                            side: BorderSide(
                               color: isUnread
                                   ? AppColors.primaryLight
                                       .withValues(alpha: 0.3)

@@ -23,69 +23,71 @@ class TransactionTile extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
+      child: Material(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.divider.withValues(alpha: 0.6)),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: isCredit
-                ? AppColors.success.withValues(alpha: 0.12)
-                : AppColors.error.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            isCredit ? Icons.arrow_downward : Icons.arrow_upward,
-            color: isCredit ? AppColors.success : AppColors.error,
-            size: 22,
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: AppColors.divider.withValues(alpha: 0.6)),
         ),
-        title: Text(
-          transaction.description?.isNotEmpty == true
-              ? transaction.description!
-              : (isCredit ? 'Nhận tiền chuyển khoản' : 'Chuyển tiền đi'),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        child: ListTile(
+          onTap: onTap,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          leading: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: isCredit
+                  ? AppColors.success.withValues(alpha: 0.12)
+                  : AppColors.error.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isCredit ? Icons.arrow_downward : Icons.arrow_upward,
+              color: isCredit ? AppColors.success : AppColors.error,
+              size: 22,
+            ),
           ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Row(
-            children: [
-              Text(
-                Formatters.formatDateTime(transaction.createdAt),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
+          title: Text(
+            transaction.description?.isNotEmpty == true
+                ? transaction.description!
+                : (isCredit ? 'Nhận tiền chuyển khoản' : 'Chuyển tiền đi'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                Text(
+                  Formatters.formatDateTime(transaction.createdAt),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '• ${transaction.reference}',
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textMuted,
+                const SizedBox(width: 8),
+                Text(
+                  '• ${transaction.reference}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        trailing: Text(
-          '${isCredit ? "+" : "-"}${Formatters.formatCurrency(absAmount)}',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: isCredit ? AppColors.success : AppColors.error,
+          trailing: Text(
+            '${isCredit ? "+" : "-"}${Formatters.formatCurrency(absAmount)}',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: isCredit ? AppColors.success : AppColors.error,
+            ),
           ),
         ),
       ),

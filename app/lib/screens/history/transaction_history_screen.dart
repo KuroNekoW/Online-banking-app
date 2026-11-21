@@ -115,8 +115,14 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     await _loadTransactions(page: 1, refresh: true);
   }
 
-  Widget _dateButton(String label, DateTime? value, VoidCallback onPressed) {
+  Widget _dateButton(
+    String label,
+    DateTime? value,
+    VoidCallback onPressed, {
+    required Key key,
+  }) {
     return OutlinedButton.icon(
+      key: key,
       onPressed: onPressed,
       icon: const Icon(Icons.calendar_month_outlined, size: 18),
       label: Text(value == null ? label : Formatters.formatDate(value)),
@@ -190,12 +196,20 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   const SizedBox(height: 6),
                   Row(children: [
                     Expanded(
-                        child: _dateButton('Từ ngày', _startDate,
-                            () => _selectDate(isStart: true))),
+                        child: _dateButton(
+                          'Từ ngày',
+                          _startDate,
+                          () => _selectDate(isStart: true),
+                          key: const ValueKey('history-start-date'),
+                        )),
                     const SizedBox(width: 8),
                     Expanded(
-                        child: _dateButton('Đến ngày', _endDate,
-                            () => _selectDate(isStart: false))),
+                        child: _dateButton(
+                          'Đến ngày',
+                          _endDate,
+                          () => _selectDate(isStart: false),
+                          key: const ValueKey('history-end-date'),
+                        )),
                     const SizedBox(width: 4),
                     IconButton(
                       tooltip: 'Xóa ngày lọc',
@@ -214,6 +228,7 @@ class TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton.icon(
+                      key: const ValueKey('history-apply-date-range'),
                       onPressed: _isLoading ? null : _applyDateRange,
                       icon: const Icon(Icons.search, size: 18),
                       label: const Text('Áp dụng khoảng ngày'),

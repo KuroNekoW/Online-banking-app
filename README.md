@@ -238,7 +238,7 @@ flutter analyze
 flutter test
 ```
 
-Hiện tại frontend mới có smoke test khởi tạo ứng dụng.
+Unit/widget tests chạy bằng `flutter test`. Test giao diện end-to-end và hướng dẫn chạy nằm trong [`app/integration_test/`](app/integration_test/IT_README.md); cần backend hoạt động với dữ liệu demo.
 
 ### Backend
 

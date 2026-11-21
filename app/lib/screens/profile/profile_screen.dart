@@ -97,37 +97,39 @@ class ProfileScreen extends StatelessWidget {
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
+      child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.divider.withValues(alpha: 0.8)),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: AppColors.divider.withValues(alpha: 0.8)),
         ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: textColor ?? AppColors.textPrimary,
+        child: ListTile(
+          onTap: onTap,
+          leading: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
           ),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: textColor ?? AppColors.textPrimary,
+            ),
+          ),
+          subtitle: subtitle != null
+              ? Text(subtitle,
+                  style: const TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary))
+              : null,
+          trailing: const Icon(Icons.chevron_right,
+              size: 20, color: AppColors.textMuted),
         ),
-        subtitle: subtitle != null
-            ? Text(subtitle,
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.textSecondary))
-            : null,
-        trailing: const Icon(Icons.chevron_right,
-            size: 20, color: AppColors.textMuted),
       ),
     );
   }

@@ -133,12 +133,13 @@ class _BeneficiaryListScreenState extends State<BeneficiaryListScreen> {
                         final item = beneficiaries[index];
                         return Container(
                           margin: const EdgeInsets.only(bottom: 10),
-                          decoration: BoxDecoration(
+                          child: Material(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.divider),
-                          ),
-                          child: ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: const BorderSide(color: AppColors.divider),
+                            ),
+                            child: ListTile(
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 6),
                             leading: CircleAvatar(
@@ -224,8 +225,9 @@ class _BeneficiaryListScreenState extends State<BeneficiaryListScreen> {
                               ],
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      );
+                    },
                     ),
         ),
       ),
